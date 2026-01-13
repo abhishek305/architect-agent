@@ -50,3 +50,11 @@ coverage/
 # Temporary files
 tmp/
 temp/
+
+# Generated documents (PRD/TDR output files)
+# Keep TEST-SCENARIO.md and other documentation
+docs/*-prd-*.md
+docs/*-tdr-*.md
+docs/*-adr-*.md
+docs/stories/
+docs/exports/
