@@ -1,36 +1,49 @@
 import { Mastra } from '@mastra/core/mastra';
 import { PinoLogger } from '@mastra/loggers';
 import { LibSQLStore } from '@mastra/libsql';
-import { weatherWorkflow } from './workflows/weather-workflow';
-import { weatherAgent } from './agents/weather-agent';
 import { architectAgent } from './agents/architect';
-import { toolCallAppropriatenessScorer, completenessScorer, translationScorer } from './scorers/weather-scorer';
+import { storyBuilderAgent } from './agents/story-builder';
+import { storyBuilderWorkflow } from './workflows/story-builder-workflow';
 
 export const mastra = new Mastra({
-  workflows: { weatherWorkflow },
-  agents: { 
-    weatherAgent,
-    architectAgent, // Document Architect Agent for PRD/TDR generation
+  workflows: { 
+    storyBuilderWorkflow, // Transforms PRD/TDR into user stories
   },
-  scorers: { toolCallAppropriatenessScorer, completenessScorer, translationScorer },
+  agents: { 
+    architectAgent,      // Document Architect Agent for PRD/TDR generation
+    storyBuilderAgent,   // Story Builder Agent for user stories & epics
+  },
   storage: new LibSQLStore({
-    // stores observability, scores, ... into memory storage, if it needs to persist, change to file:../mastra.db
     url: ":memory:",
   }),
   logger: new PinoLogger({
     name: 'Mastra',
     level: 'info',
   }),
-  telemetry: {
-    // Telemetry is deprecated and will be removed in the Nov 4th release
-    enabled: false, 
-  },
   observability: {
-    // Enables DefaultExporter and CloudExporter for AI tracing
     default: { enabled: true }, 
   },
 });
 
 // Export agents individually for direct access
 export { architectAgent } from './agents/architect';
-export { weatherAgent } from './agents/weather-agent';
+export { storyBuilderAgent } from './agents/story-builder';
+
+// Export workflow
+export { storyBuilderWorkflow } from './workflows/story-builder-workflow';
+
+// Export tools for external use
+export { 
+  saveDocumentTool, 
+  generateDiagramTool,
+  analyzeStackTool,
+  exportDocumentTool,
+} from './tools/file-tools';
+
+export {
+  readDocumentTool,
+  listDocumentsTool,
+  saveStoriesTool,
+  exportToJiraTool,
+  generateStoryDependencyTool,
+} from './tools/story-tools';

@@ -1,7 +1,7 @@
 import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
 import { LibSQLStore } from '@mastra/libsql';
-import { saveDocumentTool, generateDiagramTool } from '../tools/file-tools';
+import { saveDocumentTool, generateDiagramTool, analyzeStackTool, exportDocumentTool } from '../tools/file-tools';
 
 /**
  * Product Manager System Instructions
@@ -786,6 +786,8 @@ export const architectAgent = new Agent({
   tools: { 
     saveDocumentTool,
     generateDiagramTool,
+    analyzeStackTool,
+    exportDocumentTool,
   },
   memory: new Memory({
     storage: new LibSQLStore({

@@ -384,3 +384,397 @@ ${connections.map(conn => `    ${conn.from} --> ${conn.to}`).join('\n')}
     };
   },
 });
+
+/**
+ * Tech Stack Analyzer Tool
+ * Analyzes mentioned technologies and provides recommendations
+ */
+export const analyzeStackTool = createTool({
+  id: 'analyze-tech-stack',
+  description: 'Analyzes the tech stack mentioned in the conversation and provides tailored recommendations, best practices, and common pitfalls',
+  inputSchema: z.object({
+    technologies: z.array(z.string()).describe('List of technologies mentioned (e.g., ["React", "Node.js", "PostgreSQL"])'),
+    useCase: z.enum(['web', 'mobile', 'api', 'data-pipeline', 'ml', 'microservices', 'monolith']).describe('The type of application being built'),
+    scale: z.enum(['startup', 'growth', 'enterprise']).describe('Expected scale of the application'),
+  }),
+  outputSchema: z.object({
+    analysis: z.object({
+      strengths: z.array(z.string()),
+      concerns: z.array(z.string()),
+      recommendations: z.array(z.string()),
+    }),
+    bestPractices: z.array(z.object({
+      technology: z.string(),
+      practices: z.array(z.string()),
+    })),
+    commonPitfalls: z.array(z.object({
+      technology: z.string(),
+      pitfall: z.string(),
+      solution: z.string(),
+    })),
+    resources: z.array(z.object({
+      title: z.string(),
+      url: z.string(),
+      type: z.enum(['documentation', 'tutorial', 'article', 'video']),
+    })),
+  }),
+  execute: async ({ context }) => {
+    const { technologies, useCase, scale } = context;
+    
+    // Tech stack knowledge base
+    const techKnowledge: Record<string, {
+      strengths: string[];
+      concerns: string[];
+      practices: string[];
+      pitfalls: { pitfall: string; solution: string }[];
+      resources: { title: string; url: string; type: 'documentation' | 'tutorial' | 'article' | 'video' }[];
+    }> = {
+      'react': {
+        strengths: ['Large ecosystem', 'Component reusability', 'Strong community'],
+        concerns: ['Bundle size if not optimized', 'Learning curve for hooks'],
+        practices: [
+          'Use React.memo() for expensive components',
+          'Implement code splitting with React.lazy()',
+          'Use useCallback/useMemo for referential stability',
+          'Keep components small and focused',
+        ],
+        pitfalls: [
+          { pitfall: 'Creating new objects/arrays in render', solution: 'Use useMemo or move to state' },
+          { pitfall: 'Missing dependency array in useEffect', solution: 'Always specify dependencies, use ESLint plugin' },
+        ],
+        resources: [
+          { title: 'React Documentation', url: 'https://react.dev', type: 'documentation' },
+          { title: 'React Performance', url: 'https://react.dev/learn/render-and-commit', type: 'tutorial' },
+        ],
+      },
+      'node.js': {
+        strengths: ['Non-blocking I/O', 'Same language as frontend', 'NPM ecosystem'],
+        concerns: ['Single-threaded (CPU-bound tasks)', 'Callback complexity'],
+        practices: [
+          'Use async/await over callbacks',
+          'Implement proper error handling with try/catch',
+          'Use worker threads for CPU-intensive tasks',
+          'Always validate and sanitize inputs',
+        ],
+        pitfalls: [
+          { pitfall: 'Blocking the event loop', solution: 'Use worker threads or offload to queue' },
+          { pitfall: 'Memory leaks from unclosed connections', solution: 'Implement proper cleanup in finally blocks' },
+        ],
+        resources: [
+          { title: 'Node.js Best Practices', url: 'https://github.com/goldbergyoni/nodebestpractices', type: 'article' },
+          { title: 'Node.js Documentation', url: 'https://nodejs.org/docs', type: 'documentation' },
+        ],
+      },
+      'postgresql': {
+        strengths: ['ACID compliance', 'Advanced features (JSONB, full-text search)', 'Extensibility'],
+        concerns: ['Requires tuning for high scale', 'Write-heavy workloads need optimization'],
+        practices: [
+          'Use connection pooling (PgBouncer)',
+          'Create indexes for frequently queried columns',
+          'Use EXPLAIN ANALYZE to optimize queries',
+          'Implement proper backup and recovery',
+        ],
+        pitfalls: [
+          { pitfall: 'Missing indexes on foreign keys', solution: 'Always index FK columns' },
+          { pitfall: 'N+1 queries from ORM', solution: 'Use eager loading or raw queries' },
+        ],
+        resources: [
+          { title: 'PostgreSQL Documentation', url: 'https://www.postgresql.org/docs/', type: 'documentation' },
+          { title: 'Use The Index, Luke', url: 'https://use-the-index-luke.com/', type: 'tutorial' },
+        ],
+      },
+      'typescript': {
+        strengths: ['Type safety', 'Better IDE support', 'Catch errors at compile time'],
+        concerns: ['Build step required', 'Learning curve for complex types'],
+        practices: [
+          'Enable strict mode in tsconfig',
+          'Use branded types for IDs',
+          'Prefer unknown over any',
+          'Use discriminated unions for state',
+        ],
+        pitfalls: [
+          { pitfall: 'Overusing any type', solution: 'Use unknown and type guards instead' },
+          { pitfall: 'Type assertions without validation', solution: 'Use Zod or io-ts for runtime validation' },
+        ],
+        resources: [
+          { title: 'TypeScript Handbook', url: 'https://www.typescriptlang.org/docs/handbook/', type: 'documentation' },
+          { title: 'Total TypeScript', url: 'https://www.totaltypescript.com/', type: 'tutorial' },
+        ],
+      },
+      'redis': {
+        strengths: ['Extremely fast', 'Versatile data structures', 'Pub/sub support'],
+        concerns: ['Memory bound', 'Data persistence trade-offs'],
+        practices: [
+          'Set appropriate TTLs for cache entries',
+          'Use pipelining for batch operations',
+          'Implement cache-aside pattern',
+          'Monitor memory usage',
+        ],
+        pitfalls: [
+          { pitfall: 'Cache stampede on expiry', solution: 'Use probabilistic early recomputation' },
+          { pitfall: 'Storing large objects', solution: 'Compress or split across keys' },
+        ],
+        resources: [
+          { title: 'Redis Documentation', url: 'https://redis.io/docs/', type: 'documentation' },
+          { title: 'Redis Best Practices', url: 'https://redis.io/docs/management/optimization/', type: 'article' },
+        ],
+      },
+    };
+    
+    // Analyze the stack
+    const strengths: string[] = [];
+    const concerns: string[] = [];
+    const recommendations: string[] = [];
+    const bestPractices: { technology: string; practices: string[] }[] = [];
+    const commonPitfalls: { technology: string; pitfall: string; solution: string }[] = [];
+    const resources: { title: string; url: string; type: 'documentation' | 'tutorial' | 'article' | 'video' }[] = [];
+    
+    for (const tech of technologies) {
+      const techLower = tech.toLowerCase();
+      const knowledge = techKnowledge[techLower];
+      
+      if (knowledge) {
+        strengths.push(...knowledge.strengths.map(s => `${tech}: ${s}`));
+        concerns.push(...knowledge.concerns.map(c => `${tech}: ${c}`));
+        bestPractices.push({ technology: tech, practices: knowledge.practices });
+        commonPitfalls.push(...knowledge.pitfalls.map(p => ({ technology: tech, ...p })));
+        resources.push(...knowledge.resources);
+      }
+    }
+    
+    // Add scale-specific recommendations
+    if (scale === 'startup') {
+      recommendations.push('Focus on developer velocity over optimization');
+      recommendations.push('Use managed services (RDS, ElastiCache) to reduce ops burden');
+      recommendations.push('Implement feature flags for safe deployments');
+    } else if (scale === 'growth') {
+      recommendations.push('Implement comprehensive monitoring and alerting');
+      recommendations.push('Add caching layer to reduce database load');
+      recommendations.push('Consider read replicas for database');
+    } else if (scale === 'enterprise') {
+      recommendations.push('Implement multi-region deployment for DR');
+      recommendations.push('Add comprehensive audit logging');
+      recommendations.push('Consider service mesh for microservices');
+    }
+    
+    // Add use-case specific recommendations
+    if (useCase === 'api') {
+      recommendations.push('Implement rate limiting and throttling');
+      recommendations.push('Add request validation with Zod or Joi');
+      recommendations.push('Use OpenAPI for documentation');
+    } else if (useCase === 'web') {
+      recommendations.push('Implement SSR or SSG for SEO');
+      recommendations.push('Use CDN for static assets');
+      recommendations.push('Add performance monitoring (Web Vitals)');
+    }
+    
+    return {
+      analysis: {
+        strengths: strengths.slice(0, 10),
+        concerns: concerns.slice(0, 5),
+        recommendations,
+      },
+      bestPractices,
+      commonPitfalls,
+      resources: resources.slice(0, 10),
+    };
+  },
+});
+
+/**
+ * Export Document Tool
+ * Exports documents to different formats (HTML, Confluence, Notion)
+ */
+export const exportDocumentTool = createTool({
+  id: 'export-document',
+  description: 'Exports a document to different formats (HTML, Confluence wiki markup, or Notion)',
+  inputSchema: z.object({
+    content: z.string().describe('The markdown content to export'),
+    format: z.enum(['html', 'confluence', 'notion']).describe('Target format for export'),
+    filename: z.string().describe('Base filename for the exported file'),
+  }),
+  outputSchema: z.object({
+    success: z.boolean(),
+    exportedContent: z.string(),
+    filePath: z.string().optional(),
+    message: z.string(),
+  }),
+  execute: async ({ context }) => {
+    const { content, format, filename } = context;
+    
+    let exportedContent = '';
+    let extension = '';
+    
+    switch (format) {
+      case 'html':
+        exportedContent = convertMarkdownToHtml(content);
+        extension = 'html';
+        break;
+        
+      case 'confluence':
+        exportedContent = convertToConfluence(content);
+        extension = 'txt';
+        break;
+        
+      case 'notion':
+        exportedContent = convertToNotion(content);
+        extension = 'md';
+        break;
+    }
+    
+    // Save the exported file
+    const projectRoot = process.cwd();
+    const docsDir = path.join(projectRoot, 'docs', 'exports');
+    
+    if (!fs.existsSync(docsDir)) {
+      fs.mkdirSync(docsDir, { recursive: true });
+    }
+    
+    const timestamp = new Date().toISOString().split('T')[0];
+    const sanitizedFilename = filename.replace(/[^a-zA-Z0-9-_]/g, '-').toLowerCase();
+    const fullFilename = `${sanitizedFilename}-${format}-${timestamp}.${extension}`;
+    const filePath = path.join(docsDir, fullFilename);
+    
+    try {
+      fs.writeFileSync(filePath, exportedContent, 'utf-8');
+      
+      return {
+        success: true,
+        exportedContent,
+        filePath,
+        message: `✅ Document exported to ${format} format: ${filePath}`,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        exportedContent,
+        message: `❌ Failed to save exported file: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      };
+    }
+  },
+});
+
+/**
+ * Convert markdown to HTML with inline styles
+ */
+function convertMarkdownToHtml(markdown: string): string {
+  let html = markdown;
+  
+  // Headers
+  html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+  html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+  html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+  
+  // Bold
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  
+  // Italic
+  html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  
+  // Code blocks
+  html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code></pre>');
+  
+  // Inline code
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  
+  // Lists
+  html = html.replace(/^\- \[ \] (.*$)/gim, '<li><input type="checkbox"> $1</li>');
+  html = html.replace(/^\- \[x\] (.*$)/gim, '<li><input type="checkbox" checked> $1</li>');
+  html = html.replace(/^\- (.*$)/gim, '<li>$1</li>');
+  
+  // Links
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+  
+  // Tables (basic)
+  html = html.replace(/\|(.+)\|/g, (match, content) => {
+    const cells = content.split('|').map((cell: string) => `<td>${cell.trim()}</td>`).join('');
+    return `<tr>${cells}</tr>`;
+  });
+  
+  // Horizontal rules
+  html = html.replace(/^---$/gim, '<hr>');
+  
+  const styles = `
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 900px; margin: 0 auto; padding: 2rem; line-height: 1.6; }
+  h1 { color: #1a1a1a; border-bottom: 2px solid #e5e5e5; padding-bottom: 0.5rem; }
+  h2 { color: #2a2a2a; margin-top: 2rem; }
+  h3 { color: #3a3a3a; }
+  code { background: #f4f4f4; padding: 0.2rem 0.4rem; border-radius: 3px; font-size: 0.9em; }
+  pre { background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 8px; overflow-x: auto; }
+  pre code { background: none; padding: 0; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+  th, td { border: 1px solid #ddd; padding: 0.75rem; text-align: left; }
+  th { background: #f5f5f5; }
+  li { margin: 0.25rem 0; }
+</style>`;
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  ${styles}
+</head>
+<body>
+  ${html}
+</body>
+</html>`;
+}
+
+/**
+ * Convert markdown to Confluence wiki markup
+ */
+function convertToConfluence(markdown: string): string {
+  let wiki = markdown;
+  
+  // Headers
+  wiki = wiki.replace(/^### (.*$)/gim, 'h3. $1');
+  wiki = wiki.replace(/^## (.*$)/gim, 'h2. $1');
+  wiki = wiki.replace(/^# (.*$)/gim, 'h1. $1');
+  
+  // Bold
+  wiki = wiki.replace(/\*\*(.*?)\*\*/g, '*$1*');
+  
+  // Italic
+  wiki = wiki.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '_$1_');
+  
+  // Code blocks
+  wiki = wiki.replace(/```(\w+)?\n([\s\S]*?)```/g, '{code:$1}\n$2{code}');
+  
+  // Inline code
+  wiki = wiki.replace(/`([^`]+)`/g, '{{$1}}');
+  
+  // Lists
+  wiki = wiki.replace(/^\- \[ \] (.*$)/gim, '* (x) $1');
+  wiki = wiki.replace(/^\- \[x\] (.*$)/gim, '* (/) $1');
+  wiki = wiki.replace(/^\- (.*$)/gim, '* $1');
+  
+  // Links
+  wiki = wiki.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '[$1|$2]');
+  
+  // Tables
+  wiki = wiki.replace(/\|(.+)\|/g, (match, content) => {
+    return `||${content.split('|').join('||')}||`;
+  });
+  
+  // Horizontal rules
+  wiki = wiki.replace(/^---$/gim, '----');
+  
+  return wiki;
+}
+
+/**
+ * Convert markdown for Notion (minor adjustments for callouts)
+ */
+function convertToNotion(markdown: string): string {
+  let notion = markdown;
+  
+  // Convert tips and warnings to callout format
+  notion = notion.replace(/💡 \*\*Tip:\*\*/g, '> 💡 **Tip:**');
+  notion = notion.replace(/⚠️ \*\*Warning:\*\*/g, '> ⚠️ **Warning:**');
+  notion = notion.replace(/🔒 \*\*Junior Dev Note:\*\*/g, '> 🎓 **Junior Dev Note:**');
+  
+  return notion;
+}
