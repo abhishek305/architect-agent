@@ -277,65 +277,20 @@ This starts the server at **http://localhost:4111**
 
 #### Playground Features
 
-| Feature | Description |
-|---------|-------------|
-| **Agent Chat** | Interactive chat interface with the Architect Agent |
-| **Tool Calls** | See when tools are called (e.g., saveDocument) |
-| **Conversation History** | View full conversation with timestamps |
-| **Agent Config** | Inspect agent settings, model, and tools |
-| **API Explorer** | Test the REST API endpoints directly |
-| **Logs** | Real-time logs for debugging |
+- **Agent Chat** - Interactive UI for both agents
+- **Tool Calls** - See when tools execute (saveDocument, etc.)
+- **Logs** - Real-time debugging
+- **API Explorer** - Test REST endpoints
 
-#### Playground Screenshot
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  🏠 Mastra Playground          http://localhost:4111        │
-├─────────────────────────────────────────────────────────────┤
-│  📁 Agents                                                   │
-│    └── Architect Agent  ←── Click here                      │
-│  📁 Workflows                                                │
-│  📁 Tools                                                    │
-│  📁 Logs                                                     │
-├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│  💬 Chat with Architect Agent                               │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │ 👋 Welcome to Document Architect!                    │    │
-│  │                                                      │    │
-│  │ I can help you create:                              │    │
-│  │ • 📋 PRD (Product Requirements)                     │    │
-│  │ • 🏗️ TDR (Technical Design Review)                  │    │
-│  │                                                      │    │
-│  │ Which mode would you like? Type 'PRD' or 'TDR'      │    │
-│  └─────────────────────────────────────────────────────┘    │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │ Type your message...                          [Send]│    │
-│  └─────────────────────────────────────────────────────┘    │
-│                                                              │
-└─────────────────────────────────────────────────────────────┘
-```
-
-#### REST API Endpoints
-
-When running `npm run dev`, these API endpoints are available:
+#### REST API
 
 ```bash
-# Chat with the agent
+# Chat with agent
 POST http://localhost:4111/api/agents/architectAgent/generate
-Content-Type: application/json
-
-{
-  "messages": [
-    { "role": "user", "content": "I want to create a TDR" }
-  ]
-}
+{ "messages": [{ "role": "user", "content": "I want to create a TDR" }] }
 
 # Stream responses
 POST http://localhost:4111/api/agents/architectAgent/stream
-
-# Get agent info
-GET http://localhost:4111/api/agents/architectAgent
 ```
 
 ---
@@ -375,415 +330,65 @@ Q1 - Architecture Overview:
 
 ---
 
-## 🧪 Complete End-to-End Example
+## 🧪 Testing All Features
 
-This section walks through testing **all features** of both agents using a realistic "Smart Notification System" scenario.
+For a complete end-to-end test with sample responses for all agents, see:
 
-### Phase 1: Generate a PRD (Product Manager Mode)
+📖 **[Complete Test Scenario](./docs/TEST-SCENARIO.md)**
 
+The test scenario covers:
+- PRD generation (Product Manager mode)
+- TDR generation (Principal Engineer mode)  
+- User story generation (Story Builder)
+- Jira CSV export
+- Tech stack analysis
+- HTML & Confluence export
+
+**Quick test:**
 ```bash
+# Start the agent
 npm run architect
-# Or: npm run dev → http://localhost:4111 → Agents → Architect Agent
-```
 
-**Step 1 - Select Mode:**
-```
-PRD
-```
-
-**Step 2 - Project Name:**
-```
-Smart Notification System
-```
-
-**Q1 - Problem Discovery (copy this response):**
-```
-Our users are missing important updates because they rely on checking the app manually. 
-For example, a project manager named Sarah checks her dashboard 5 times a day just to see 
-if any team member has completed a task or if a deadline is approaching. Yesterday, she 
-missed a critical deadline because the status update was buried in a long list. She wants 
-to be notified immediately when something important happens.
-```
-
-**Q2 - Target Audience:**
-```
-Primary Persona: Sarah, Project Manager at a 50-person marketing agency
-- Technical Level: Semi-technical (uses Slack, Notion, basic automation)
-- Current Workaround: Browser tab always open, refreshes every 30 minutes, 
-  sets manual calendar reminders for critical deadlines
-- Also uses email notifications from other tools but finds them overwhelming
-```
-
-**Q3 - Success Metrics:**
-```
-1. Reduce "missed deadline" incidents by 80% (currently 5/month → target 1/month)
-2. Decrease average "time to acknowledge" from 4 hours to 15 minutes
-3. Achieve 70% notification preference setup completion within first week
-4. Reduce app refresh rate by 60% (tracked via analytics)
-```
-
-**Q4 - MVP Scope:**
-```
-Must Have (P0):
-- In-app notification bell with unread count
-- Real-time notification popup for critical alerts
-- Basic notification preferences (on/off per category)
-- Mark as read/unread functionality
-
-Should Have (P1):
-- Email digest (daily/weekly summary)
-- Push notifications for mobile
-
-Nice to Have (P2):
-- Slack/Teams integration
-- Custom notification rules
-```
-
-**Q5 - Business Context:**
-```
-This is driven by customer retention concerns. In our last NPS survey, 23% of detractors 
-mentioned "missing important updates" as a pain point. Three competitors launched 
-notification features in Q4 2025. If we don't ship in Q1 2026, we risk losing 2 enterprise 
-renewals worth $180K ARR.
-```
-
-**✅ Output:** `docs/smart-notification-system-prd-YYYY-MM-DD.md`
-
----
-
-### Phase 2: Generate a TDR (Principal Engineer Mode)
-
-```bash
-npm run architect
-```
-
-**Select Mode:**
-```
-TDR
-```
-
-**System Name:**
-```
-Smart Notification System - Real-time notification delivery with multi-channel support
-```
-
-**Q1 - Architecture Overview:**
-```
-The system has these components:
-
-1. Frontend (React): 
-   - NotificationBell component with WebSocket connection
-   - NotificationPreferences settings page
-
-2. Notification Service (Node.js):
-   - REST API for CRUD operations
-   - WebSocket server for real-time delivery
-
-3. Message Queue (Redis):
-   - Pub/Sub for real-time notifications
-   - Queue for batch processing (email digests)
-
-4. Database (PostgreSQL):
-   - notifications table
-   - notification_preferences table
-
-5. External Services:
-   - SendGrid for email, Firebase for push
-```
-
-**Q2 - Security Deep Dive:**
-```
-Authentication: JWT tokens with 1-hour expiry, refresh tokens in httpOnly cookies
-
-Authorization: 
-- Users can only see their own notifications
-- Admins can send system-wide notifications
-- Rate limiting: 100 requests/minute per user
-
-If JWT is stolen:
-- Short expiry limits damage
-- Refresh token rotation on use
-- User can revoke all sessions
-```
-
-**Q3 - Data & Scalability:**
-```
-Main tables:
-
-notifications:
-- id (UUID), user_id, type, title, body, read_at, created_at, metadata (JSONB)
-- Indexes: user_id, created_at DESC
-
-At 10M notifications:
-- Partitioning by created_at (monthly)
-- Archive old notifications (>90 days)
-- Unread count cached in Redis
-```
-
-**Q4 - Failure Modes:**
-```
-Database goes down:
-- Read from Redis cache for recent notifications
-- Queue new notifications, replay when DB recovers
-
-WebSocket disconnects:
-- Auto-reconnect with exponential backoff
-- Fetch missed notifications on reconnect
-
-Traffic spike (10x):
-- Redis handles burst
-- Auto-scale WebSocket servers
-```
-
-**Q5 - Implementation Path:**
-```
-Guardrails:
-1. All endpoints use Zod schemas for validation
-2. All queries through TypeORM (parameterized)
-3. Redis-based rate limiting
-4. WebSocket token validated on connection
-5. No raw SQL in code reviews
-```
-
-**✅ Output:** `docs/smart-notification-system-tdr-YYYY-MM-DD.md`
-
----
-
-### Phase 3: Generate User Stories (Story Builder Agent)
-
-```bash
-npm run dev
-# Open http://localhost:4111 → Agents → Story Builder Agent
-```
-
-**Q1 - Document Selection:**
-```
-Use the PRD file: smart-notification-system-prd-YYYY-MM-DD.md
-```
-(Replace with actual filename from Phase 1)
-
-**Q2 - Team Context:**
-```
-- Sprint duration: 2 weeks
-- Average velocity: 24 story points per sprint
-- Team size: 4 engineers (2 backend, 1 frontend, 1 full-stack)
-```
-
-**Q3 - Priority & Scope:**
-```
-Focus on P0 (MVP) only. Ship in-app notification bell and real-time popups first.
-```
-
-**Q4 - Technical Constraints:**
-```
-- Must integrate with existing React app (using React Query)
-- Backend is Node.js with Express, PostgreSQL
-- Already have Redis for caching
-- JWT-based authentication already exists
-```
-
-**Q5 - Definition of Done:**
-```
-Standard DoD, plus:
-- Performance test completed (< 100ms notification delivery)
-- Accessibility audit passed (WCAG 2.1 AA)
-- Feature flag configured
-```
-
-**✅ Output:** `docs/stories/smart-notification-system-stories-YYYY-MM-DD.md`
-
-**Export to Jira:**
-```
-Please export these stories to Jira CSV format with project key NOTIFY
-```
-
-**✅ Output:** `docs/exports/notify-stories-jira-YYYY-MM-DD.csv`
-
----
-
-### Phase 4: Test Additional Tools
-
-#### Tech Stack Analyzer
-
-In the Architect Agent, ask:
-```
-Can you analyze our tech stack? We're using:
-- React 18
-- Node.js 20
-- PostgreSQL 15
-- Redis 7
-- TypeScript 5
-
-This is a growth-stage startup with a medium-sized team.
-```
-
-**✅ Expected:** Strengths, concerns, best practices, pitfalls, and learning resources.
-
-#### Export to Confluence
-
-After generating a TDR:
-```
-Can you export this TDR to Confluence wiki markup?
-```
-
-**✅ Output:** `docs/exports/smart-notification-system-confluence-YYYY-MM-DD.txt`
-
-#### Export to HTML
-
-```
-Can you export this TDR to HTML format?
-```
-
-**✅ Output:** `docs/exports/smart-notification-system-html-YYYY-MM-DD.html`
-
----
-
-### Complete Test Checklist
-
-| Feature | Test | Expected Result |
-|---------|------|-----------------|
-| PRD Generation | Complete interview | Full PRD with all sections |
-| TDR Generation | Complete interview | TDR with Mermaid diagrams + code |
-| Story Generation | Use PRD as input | Epics, stories, acceptance criteria |
-| Jira Export | Request CSV export | Valid CSV for Jira import |
-| Stack Analyzer | Provide tech stack | Best practices + pitfalls |
-| HTML Export | Request export | Formatted HTML file |
-| Confluence Export | Request export | Wiki markup file |
-
-### Troubleshooting
-
-```bash
-# Agent doesn't respond?
-ollama list                        # Check Ollama is running
-cat .env                           # Verify env variables
-
-# File not saving?
-ls -la docs/                       # Check directory exists
-mkdir -p docs/stories docs/exports # Create if missing
-
-# Jira CSV encoding issues?
-# Import to Jira with UTF-8 encoding selected
+# When prompted, type: PRD
+# Follow the 5-question interview
+# Document saves to: docs/[project-name]-prd-YYYY-MM-DD.md
 ```
 
 ---
 
 ## 🛠️ Story Builder Agent
 
-The **Story Builder Agent** transforms your PRDs and TDRs into implementation-ready user stories.
-
-### How to Use
+Transforms PRDs/TDRs into implementation-ready user stories with acceptance criteria, test cases, and sprint plans.
 
 ```bash
-# Step 1: Start the Mastra dev server
-npm run dev
-
-# Step 2: Open browser
-open http://localhost:4111
-
-# Step 3: Navigate to Agents → Story Builder Agent
-
-# Step 4: The agent will guide you through 5 questions:
-#   Q1 - Select a document from /docs or paste content
-#   Q2 - Provide team context (sprint duration, velocity)
-#   Q3 - Set priority & scope
-#   Q4 - Describe technical constraints
-#   Q5 - Define your Definition of Done
+npm run dev  # Open http://localhost:4111 → Story Builder Agent
 ```
-
-> **Tip:** First generate a PRD or TDR using the Architect Agent, then use the Story Builder to break it down into implementable stories.
 
 ### What It Generates
 
 | Output | Description |
 |--------|-------------|
-| **Epics** | Grouped features with business value and success metrics |
-| **User Stories** | As a/I want/So that format with full details |
+| **Epics** | Grouped features with business value |
+| **User Stories** | As a/I want/So that format |
 | **Acceptance Criteria** | Given/When/Then testable criteria |
-| **Definition of Done** | Checklist for story completion |
 | **Test Cases** | Happy path, edge cases, error scenarios |
-| **Story Points** | Fibonacci estimates (1,2,3,5,8,13) |
-| **Sprint Plan** | Stories allocated to sprints based on velocity |
-| **Dependencies** | Mermaid diagram showing story relationships |
-| **Jira Export** | CSV file ready for bulk import |
+| **Sprint Plan** | Stories allocated by velocity |
+| **Jira Export** | CSV ready for bulk import |
 
-### Example Story Output
-
-```markdown
-### US-0101: User Authentication - Setup
-
-**Priority:** P0 | **Points:** 5 | **Sprint:** 1
-
-**As a** end user,  
-**I want** to log in with my email and password,  
-**So that** I can access my personalized dashboard.
-
-#### Acceptance Criteria
-
-1. **Given** I'm on the login page, **When** I enter valid credentials, **Then** I'm redirected to the dashboard
-2. **Given** I enter wrong password, **When** I submit, **Then** I see "Invalid credentials" error
-3. **Given** I'm logged in, **When** my session expires, **Then** I'm prompted to log in again
-
-#### Definition of Done
-
-- [ ] Code complete with unit tests (>80% coverage)
-- [ ] Code reviewed by at least 1 team member
-- [ ] All acceptance criteria verified
-- [ ] Integration tests passing
-- [ ] Documentation updated
-
-#### Test Cases
-
-**Happy Path:**
-| Step | Action | Expected Result |
-|------|--------|-----------------|
-| 1 | Navigate to /login | Login form displayed |
-| 2 | Enter valid email/password | Form accepts input |
-| 3 | Click "Sign In" | Redirect to dashboard |
-
-**Edge Cases:**
-| Scenario | Input | Expected Behavior |
-|----------|-------|-------------------|
-| Empty email | "" | "Email is required" |
-| Invalid format | "notanemail" | "Invalid email format" |
-
-**Error Scenarios:**
-| Scenario | Trigger | Expected Behavior |
-|----------|---------|-------------------|
-| Network down | API timeout | Show retry option |
-| Account locked | 5 failed attempts | Show "Account locked" message |
-```
-
-### Workflow: Chaining Documents to Stories
-
-The **Story Builder Workflow** automatically processes documents through these steps:
+### Workflow Steps
 
 ```
-┌─────────────────┐
-│ 1. Parse Doc    │ Extract requirements from PRD/TDR
-├─────────────────┤
-│ 2. Gen Epics    │ Group features into logical epics
-├─────────────────┤
-│ 3. Create       │ Break down epics into user stories
-│    Stories      │
-├─────────────────┤
-│ 4. Add Details  │ Acceptance criteria, DoD, test cases
-├─────────────────┤
-│ 5. Estimate &   │ Story points + sprint allocation
-│    Plan         │
-├─────────────────┤
-│ 6. Output       │ Markdown + optional Jira CSV
-└─────────────────┘
+Parse Doc → Generate Epics → Create Stories → Add Details → Sprint Plan → Output
 ```
 
-### Tools Available
+### Available Tools
 
 | Tool | Description |
 |------|-------------|
-| `listDocumentsTool` | List PRDs/TDRs in /docs folder |
-| `readDocumentTool` | Read a document for processing |
-| `saveStoriesTool` | Save stories to /docs/stories/ |
-| `exportToJiraTool` | Export as Jira-compatible CSV |
-| `generateStoryDependencyTool` | Create dependency diagram |
+| `listDocumentsTool` | List PRDs/TDRs in /docs |
+| `readDocumentTool` | Read document content |
+| `saveStoriesTool` | Save to /docs/stories/ |
+| `exportToJiraTool` | Export as Jira CSV |
 
 ---
 
@@ -838,139 +443,58 @@ architect-agent/
 
 ## 🎯 Who Is This For?
 
-### Product Managers
+| Role | Use Case |
+|------|----------|
+| **Product Managers** | PRD templates, structured interviews, consistent output |
+| **Engineers** | TDRs with security, scalability, code examples, pitfalls |
+| **Scrum Masters** | User stories, acceptance criteria, sprint planning |
+| **QA Engineers** | Test cases, DoD checklists, edge case coverage |
 
-- **Struggling to start a PRD?** Let the AI interview you with proven questions
-- **Missing key sections?** The template ensures comprehensive coverage
-- **Need consistency?** Same format every time
+## 📝 Output Sections
 
-### Engineers
-
-- **Designing a new system?** Get prompted on security, scalability, failure modes
-- **Onboarding juniors?** TDRs include code examples and common pitfalls
-- **Architecture reviews?** Share generated TDRs with your team
-
-### Scrum Masters / Agile Coaches
-
-- **Breaking down features?** Story Builder creates structured epics and stories
-- **Writing acceptance criteria?** Given/When/Then format with edge cases
-- **Sprint planning?** Automatic story point estimates and sprint allocation
-- **Jira setup?** Export directly to Jira-compatible CSV
-
-### QA Engineers
-
-- **Test case creation?** Happy path, edge cases, and error scenarios included
-- **Definition of Done?** Clear checklist for each story
-- **Coverage gaps?** Stories include technical notes and dependencies
-
----
-
-## 📝 Output Examples
-
-### PRD Output Includes:
-- Executive Summary
-- Problem Statement with Pain Points Table
-- Target Persona
-- Success Metrics & KPIs
-- Prioritized Requirements (P0/P1/P2)
-- User Stories with Acceptance Criteria
-- Timeline & Milestones
-- Risks & Mitigations
-
-### TDR Output Includes:
-- Architecture Diagram (Mermaid.js)
-- Component Descriptions
-- Security Design with Code Examples
-- Database Schema (SQL)
-- Scalability Patterns
-- Circuit Breaker Implementation
-- Rate Limiting Code
-- Common Pitfalls with Before/After
-- Testing Strategy
+| PRD | TDR | Stories |
+|-----|-----|---------|
+| Executive Summary | Architecture Diagram (Mermaid) | Epics Overview |
+| Problem Statement | Security Design + Code | User Stories |
+| Target Persona | Database Schema (SQL) | Acceptance Criteria |
+| Success Metrics | Scalability Patterns | Test Cases |
+| Requirements (P0/P1/P2) | Rate Limiting Code | Sprint Plan |
+| Timeline & Risks | Common Pitfalls | Jira CSV |
 
 ---
 
 ## 🛠️ Development
 
-### Running Modes
+| Command | Description |
+|---------|-------------|
+| `npm run architect` | CLI mode |
+| `npm run dev` | Web UI at http://localhost:4111 |
+| `npm run build` | Build for production |
 
-| Command | Description | URL |
-|---------|-------------|-----|
-| `npm run architect` | CLI mode - terminal interview | N/A |
-| `npm run dev` | Mastra dev server with Playground UI | http://localhost:4111 |
-| `npm run build` | Build for production | N/A |
-| `npm run start` | Start production server | http://localhost:4111 |
-
-### Mastra Dev Server Features
-
-When you run `npm run dev`, you get:
-
-1. **Playground UI** - Visual interface to chat with agents
-2. **Hot Reload** - Changes to agents/tools auto-reload
-3. **REST API** - Full API for integrating with other apps
-4. **Logs Panel** - Real-time debugging logs
-5. **Tool Inspector** - See tool definitions and test them
-
-### Adding New Providers
-
-To add a new LLM provider:
-
-1. Install the AI SDK provider package
-2. Update `getModelConfig()` in `architect.ts`
-3. Add environment variable to `.env`
-
-Example for a new provider:
-
-```typescript
-import { someProvider } from '@ai-sdk/some-provider';
-
-function getModelConfig() {
-  if (process.env.SOME_PROVIDER_API_KEY) {
-    return someProvider('model-name');
-  }
-  // ... existing config
-}
-```
+**Adding new LLM providers:** Install the AI SDK package, update `getModelConfig()` in `architect.ts`, add env variable.
 
 ---
 
-## 🔐 Security Notes
+## 🔐 Security
 
-- **Never commit `.env` files** - They're in `.gitignore`
-- **Rotate leaked keys immediately** - Generate new ones if exposed
-- **Use environment variables** - Don't hardcode API keys
-- **The `.env.example` file** - Safe to commit (contains no real keys)
+- Never commit `.env` files (already in `.gitignore`)
+- Rotate leaked keys immediately
+- The `env.example` is safe to commit
 
 ---
 
 ## 📚 Resources
 
-- [Mastra Documentation](https://docs.mastra.ai)
-- [Mastra GitHub](https://github.com/mastra-ai/mastra)
-- [AI SDK Documentation](https://sdk.vercel.ai/docs)
+- [Mastra Docs](https://docs.mastra.ai) • [Mastra GitHub](https://github.com/mastra-ai/mastra)
 - [Ollama Cloud Models](https://ollama.com/blog/cloud-models)
-- [Complete Test Scenario](./docs/TEST-SCENARIO.md) - Detailed testing guide with sample responses
-
----
-
-## 🤝 Contributing
-
-Contributions welcome! Please:
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+- [Complete Test Scenario](./docs/TEST-SCENARIO.md)
 
 ---
 
 ## 📄 License
 
-MIT License - feel free to use this for your own projects!
+MIT License
 
 ---
 
-## 🙏 Acknowledgments
-
-- Built with [Mastra.ai](https://mastra.ai)
-- Powered by [Vercel AI SDK](https://sdk.vercel.ai)
-- LLM providers: Ollama, Groq, OpenAI, Anthropic, Google
+**Built with [Mastra.ai](https://mastra.ai)** • Powered by Ollama, Groq, OpenAI, Anthropic, Google
