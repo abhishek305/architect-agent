@@ -1,8 +1,21 @@
 # 📐 Document Architect
 
-An AI-powered CLI tool that interviews you like a Senior PM or Principal Engineer to generate professional **PRDs (Product Requirements Documents)** and **TDRs (Technical Design Reviews)**.
+An AI-powered agent that interviews you like a Senior PM or Principal Engineer to generate professional **PRDs (Product Requirements Documents)** and **TDRs (Technical Design Reviews)**.
 
-Built with [Mastra.ai](https://mastra.ai) - a TypeScript framework for building AI agents with tools, memory, and workflows.
+Built with [Mastra.ai](https://mastra.ai) — a TypeScript framework for building AI agents with tools, memory, and workflows, powered by the [Vercel AI SDK](https://sdk.vercel.ai).
+
+---
+
+## 🎮 Two Ways to Interact
+
+Mastra provides **two built-in interfaces** to interact with the Architect Agent:
+
+| Interface | Command | Description |
+|-----------|---------|-------------|
+| **🖥️ Mastra Playground** | `npm run dev` | Web UI at http://localhost:4111 with chat interface, tool inspector, and logs |
+| **⌨️ CLI Mode** | `npm run architect` | Terminal-based interactive interview |
+
+Both interfaces use the same underlying agent — choose based on your preference!
 
 ---
 
@@ -18,10 +31,22 @@ Built with [Mastra.ai](https://mastra.ai) - a TypeScript framework for building 
 ### Key Capabilities
 
 - **Interactive Interview**: 5 focused questions, one at a time
-- **Conversation Memory**: Maintains context across the entire session
+- **Conversation Memory**: Maintains context across the entire session (powered by LibSQL)
 - **Rich Document Output**: Markdown with tables, Mermaid diagrams, code examples
-- **Automatic File Saving**: Documents saved to `/docs` folder
-- **Multiple LLM Providers**: Works with free and paid models
+- **Automatic File Saving**: Documents saved to `/docs` folder via Mastra Tools
+- **Multiple LLM Providers**: Works with Ollama, Groq, OpenAI, Anthropic, Google (via Vercel AI SDK)
+
+---
+
+## 🏗️ Tech Stack
+
+| Component | Technology |
+|-----------|------------|
+| **Framework** | [Mastra.ai](https://mastra.ai) |
+| **AI SDK** | [Vercel AI SDK](https://sdk.vercel.ai) (for LLM provider abstraction) |
+| **Memory** | SQLite via [@mastra/libsql](https://www.npmjs.com/package/@mastra/libsql) |
+| **Language** | TypeScript |
+| **Runtime** | Node.js 22+ |
 
 ---
 
@@ -31,8 +56,8 @@ Built with [Mastra.ai](https://mastra.ai) - a TypeScript framework for building 
 
 - **Node.js 22+** (required)
 - **One of the following LLM providers:**
-  - Ollama (local, free)
-  - Ollama Cloud Models (free with Ollama account)
+  - Ollama Cloud Models (free with Ollama account) ✨ Recommended
+  - Local Ollama (free, requires GPU)
   - Groq (free tier available)
   - OpenAI (paid)
 
@@ -40,8 +65,8 @@ Built with [Mastra.ai](https://mastra.ai) - a TypeScript framework for building 
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/document-architect.git
-cd document-architect
+git clone https://github.com/yourusername/architect-agent.git
+cd architect-agent
 
 # Install dependencies
 npm install
@@ -50,252 +75,61 @@ npm install
 cp env.example .env
 
 # Configure your LLM provider (see below)
-# Then run!
+```
+
+### Start Using
+
+```bash
+# Option 1: Mastra Playground (Web UI)
+npm run dev
+# Open http://localhost:4111 → Agents → Architect Agent
+
+# Option 2: CLI Mode
 npm run architect
 ```
 
 ---
 
-## 🔧 LLM Provider Configuration
+## 🎮 Using the Mastra Playground (Web UI)
 
-### Option 1: Ollama Cloud Models (Recommended - Free)
-
-Ollama Cloud lets you run massive models (up to 671B parameters) via Ollama's infrastructure while using your local Ollama as a proxy. **No API key required!**
+The Mastra Playground provides a visual interface for interacting with agents.
 
 ```bash
-# 1. Install Ollama (v0.12+)
-# macOS
-brew install ollama
-
-# Or download from https://ollama.com
-
-# 2. Sign in to Ollama Cloud
-ollama signin
-
-# 3. Pull a cloud model
-ollama pull qwen3-coder:480b-cloud
-```
-
-**Available Cloud Models:**
-| Model | Size | Best For |
-|-------|------|----------|
-| `qwen3-coder:480b-cloud` | 480B | Code generation, TDRs |
-| `gpt-oss:120b-cloud` | 120B | General purpose |
-| `gpt-oss:20b-cloud` | 20B | Faster responses |
-| `deepseek-v3.1:671b-cloud` | 671B | Most capable |
-
-**Configure `.env`:**
-```env
-USE_OLLAMA=true
-OLLAMA_MODEL=qwen3-coder:480b-cloud
-OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_API_KEY=ollama
-```
-
----
-
-### Option 2: Local Ollama (Free)
-
-Run models entirely on your machine. Requires a GPU with sufficient VRAM.
-
-```bash
-# Install Ollama
-brew install ollama
-
-# Pull a local model
-ollama pull llama3.2:3b      # Light (2GB VRAM)
-ollama pull llama3:8b        # Medium (8GB VRAM)
-ollama pull llama3:70b       # Heavy (40GB VRAM)
-ollama pull codellama:7b     # For code-focused tasks
-```
-
-**Configure `.env`:**
-```env
-USE_OLLAMA=true
-OLLAMA_MODEL=llama3:8b
-OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_API_KEY=ollama
-```
-
----
-
-### Option 3: Groq (Free Tier - Fast!)
-
-Groq provides blazing-fast inference with a generous free tier.
-
-1. Sign up at [console.groq.com](https://console.groq.com)
-2. Create an API key
-
-**Configure `.env`:**
-```env
-USE_OLLAMA=false
-GROQ_API_KEY=gsk_your_api_key_here
-```
-
-**Available Models (via Groq):**
-- `llama-3.3-70b-versatile` (default)
-- `llama-3.1-8b-instant`
-- `mixtral-8x7b-32768`
-
----
-
-### Option 4: OpenAI (Paid)
-
-For the highest quality outputs using GPT-4.
-
-1. Get an API key from [platform.openai.com](https://platform.openai.com)
-2. Modify `src/mastra/agents/architect.ts` to use OpenAI
-
-**Configure `.env`:**
-```env
-OPENAI_API_KEY=sk-your_api_key_here
-```
-
-**Update the agent** (`src/mastra/agents/architect.ts`):
-```typescript
-function getModelConfig() {
-  if (process.env.OPENAI_API_KEY) {
-    return 'openai/gpt-4o';
-  }
-  // ... rest of config
-}
-```
-
----
-
-### Option 5: Google Gemini (Free Tier)
-
-1. Get an API key from [aistudio.google.com](https://aistudio.google.com)
-2. Install the Gemini provider: `npm install @ai-sdk/google`
-
-**Configure `.env`:**
-```env
-GOOGLE_API_KEY=your_api_key_here
-```
-
-**Update the agent:**
-```typescript
-import { google } from '@ai-sdk/google';
-
-function getModelConfig() {
-  if (process.env.GOOGLE_API_KEY) {
-    return google('gemini-1.5-pro');
-  }
-  // ... rest of config
-}
-```
-
----
-
-### Option 6: Anthropic Claude (Paid)
-
-1. Get an API key from [console.anthropic.com](https://console.anthropic.com)
-2. Install the Anthropic provider: `npm install @ai-sdk/anthropic`
-
-**Configure `.env`:**
-```env
-ANTHROPIC_API_KEY=sk-ant-your_api_key_here
-```
-
-**Update the agent:**
-```typescript
-import { anthropic } from '@ai-sdk/anthropic';
-
-function getModelConfig() {
-  if (process.env.ANTHROPIC_API_KEY) {
-    return anthropic('claude-3-5-sonnet-20241022');
-  }
-  // ... rest of config
-}
-```
-
----
-
-## 📖 Usage
-
-### Option 1: CLI Mode
-
-The simplest way to use Document Architect:
-
-```bash
-# Start the interactive session
-npm run architect
-
-# With file watching (auto-restart on code changes)
-npm run architect:dev
-```
-
-### Option 2: Mastra Playground (Web UI)
-
-Mastra includes a built-in **Playground UI** for interacting with agents visually.
-
-```bash
-# Start the Mastra dev server
 npm run dev
 ```
 
-This starts the server at **http://localhost:4111**
+Open **http://localhost:4111** in your browser.
 
-#### Accessing the Playground
-
-1. Open your browser to `http://localhost:4111`
-2. Navigate to **Agents** in the sidebar
-3. Select **"Architect Agent"**
-4. Start chatting in the interactive UI!
-
-#### Playground Features
+### Playground Features
 
 | Feature | Description |
 |---------|-------------|
 | **Agent Chat** | Interactive chat interface with the Architect Agent |
-| **Tool Calls** | See when tools are called (e.g., saveDocument) |
+| **Tool Calls** | See when tools are called (e.g., `saveDocumentTool`) |
 | **Conversation History** | View full conversation with timestamps |
-| **Agent Config** | Inspect agent settings, model, and tools |
+| **Agent Config** | Inspect agent settings, model, and attached tools |
 | **API Explorer** | Test the REST API endpoints directly |
 | **Logs** | Real-time logs for debugging |
 
-#### Playground Screenshot
+### Navigation
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  🏠 Mastra Playground          http://localhost:4111        │
-├─────────────────────────────────────────────────────────────┤
-│  📁 Agents                                                   │
-│    └── Architect Agent  ←── Click here                      │
-│  📁 Workflows                                                │
-│  📁 Tools                                                    │
-│  📁 Logs                                                     │
-├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│  💬 Chat with Architect Agent                               │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │ 👋 Welcome to Document Architect!                    │    │
-│  │                                                      │    │
-│  │ I can help you create:                              │    │
-│  │ • 📋 PRD (Product Requirements)                     │    │
-│  │ • 🏗️ TDR (Technical Design Review)                  │    │
-│  │                                                      │    │
-│  │ Which mode would you like? Type 'PRD' or 'TDR'      │    │
-│  └─────────────────────────────────────────────────────┘    │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │ Type your message...                          [Send]│    │
-│  └─────────────────────────────────────────────────────┘    │
-│                                                              │
-└─────────────────────────────────────────────────────────────┘
-```
+1. Open http://localhost:4111
+2. Click **Agents** in the sidebar
+3. Select **"Architect Agent"**
+4. Start chatting!
 
-#### REST API Endpoints
+### REST API
 
-When running `npm run dev`, these API endpoints are available:
+The Mastra dev server also exposes REST endpoints:
 
 ```bash
-# Chat with the agent
+# Generate a response
 POST http://localhost:4111/api/agents/architectAgent/generate
 Content-Type: application/json
 
 {
   "messages": [
-    { "role": "user", "content": "I want to create a TDR" }
+    { "role": "user", "content": "I want to create a TDR for a payment system" }
   ]
 }
 
@@ -308,11 +142,17 @@ GET http://localhost:4111/api/agents/architectAgent
 
 ---
 
-### CLI Example Session
+## ⌨️ Using CLI Mode
+
+For terminal lovers, the CLI provides an interactive interview experience:
+
+```bash
+npm run architect
+```
+
+### Example Session
 
 ```
-$ npm run architect
-
 🤖 Document Architect Agent
 ════════════════════════════════════════════════════════════
 
@@ -333,7 +173,7 @@ What system or feature are you designing?
 You: A real-time collaborative document editor like Google Docs
 
 Q1 - Architecture Overview:
-"Walk me through the system architecture. What are the main components..."
+"Walk me through the system architecture..."
 
 [... 5 questions later ...]
 
@@ -343,39 +183,162 @@ Q1 - Architecture Overview:
 
 ---
 
+## 🔧 LLM Provider Configuration
+
+### Option 1: Ollama Cloud Models (Recommended - Free)
+
+Ollama Cloud lets you run massive models (up to 671B parameters) via Ollama's infrastructure. **No API key required!**
+
+```bash
+# 1. Install Ollama (v0.12+)
+brew install ollama  # macOS
+# Or download from https://ollama.com
+
+# 2. Sign in to Ollama Cloud
+ollama signin
+
+# 3. Pull a cloud model
+ollama pull qwen3-coder:480b-cloud
+```
+
+**Available Cloud Models:**
+| Model | Size | Best For |
+|-------|------|----------|
+| `qwen3-coder:480b-cloud` | 480B | Code generation, TDRs |
+| `gpt-oss:120b-cloud` | 120B | General purpose |
+| `deepseek-v3.1:671b-cloud` | 671B | Most capable |
+
+**Configure `.env`:**
+```env
+USE_OLLAMA=true
+OLLAMA_MODEL=qwen3-coder:480b-cloud
+OLLAMA_BASE_URL=http://localhost:11434
+```
+
+---
+
+### Option 2: Local Ollama (Free)
+
+Run models on your machine. Requires GPU with sufficient VRAM.
+
+```bash
+ollama pull llama3:8b        # 8GB VRAM
+ollama pull codellama:7b     # 6GB VRAM
+```
+
+**Configure `.env`:**
+```env
+USE_OLLAMA=true
+OLLAMA_MODEL=llama3:8b
+OLLAMA_BASE_URL=http://localhost:11434
+```
+
+---
+
+### Option 3: Groq (Free Tier - Fast!)
+
+Groq provides blazing-fast inference with a generous free tier.
+
+1. Sign up at [console.groq.com](https://console.groq.com)
+2. Create an API key
+
+**Configure `.env`:**
+```env
+USE_OLLAMA=false
+GROQ_API_KEY=gsk_your_api_key_here
+```
+
+---
+
+### Option 4: OpenAI (Paid)
+
+For GPT-4 quality outputs.
+
+1. Get an API key from [platform.openai.com](https://platform.openai.com)
+2. Modify `src/mastra/agents/architect.ts`:
+
+```typescript
+function getModelConfig() {
+  if (process.env.OPENAI_API_KEY) {
+    return 'openai/gpt-4o';
+  }
+  // ... rest of config
+}
+```
+
+**Configure `.env`:**
+```env
+OPENAI_API_KEY=sk-your_api_key_here
+```
+
+---
+
+### Option 5: Google Gemini (Free Tier)
+
+```bash
+npm install @ai-sdk/google
+```
+
+**Configure `.env`:**
+```env
+GOOGLE_API_KEY=your_api_key_here
+```
+
+---
+
+### Option 6: Anthropic Claude (Paid)
+
+```bash
+npm install @ai-sdk/anthropic
+```
+
+**Configure `.env`:**
+```env
+ANTHROPIC_API_KEY=sk-ant-your_api_key_here
+```
+
+---
+
 ## 🏗️ How It Works
 
-### Built with Mastra.ai
+### Architecture
 
-[Mastra](https://mastra.ai) is a TypeScript framework for building AI agents. This project demonstrates:
-
-1. **Agent Definition** (`src/mastra/agents/architect.ts`)
-   - System instructions for PM and Engineer personas
-   - Dynamic model configuration (Ollama/Groq/OpenAI)
-   - Attached tools for document generation
-
-2. **Tools** (`src/mastra/tools/file-tools.ts`)
-   - `saveDocumentTool`: Saves generated markdown to disk
-   - `generateDiagramTool`: Creates Mermaid.js diagrams
-
-3. **Memory** (SQLite via LibSQL)
-   - Persists conversation history across sessions
-   - Enables context-aware follow-up questions
-
-4. **CLI Runner** (`run.ts`)
-   - Interactive readline interface
-   - Handles user input/output loop
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        Mastra Framework                          │
+├─────────────────────────────────────────────────────────────────┤
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐         │
+│  │   Agent     │    │   Tools     │    │   Memory    │         │
+│  │ (Architect) │ ←→ │ (Save Doc)  │ ←→ │  (LibSQL)   │         │
+│  └─────────────┘    └─────────────┘    └─────────────┘         │
+│         ↓                                                        │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │                   Vercel AI SDK                          │    │
+│  │  (Provider abstraction: Ollama, Groq, OpenAI, etc.)     │    │
+│  └─────────────────────────────────────────────────────────┘    │
+│         ↓                                                        │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │              LLM Provider (your choice)                  │    │
+│  │  Ollama Cloud │ Local Ollama │ Groq │ OpenAI │ etc.     │    │
+│  └─────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────┘
+         ↓                              ↓
+  ┌─────────────┐                ┌─────────────┐
+  │ Playground  │                │    CLI      │
+  │  (Web UI)   │                │ (Terminal)  │
+  └─────────────┘                └─────────────┘
+```
 
 ### Project Structure
 
 ```
-Architect Agent/
+architect-agent/
 ├── src/
 │   └── mastra/
 │       ├── agents/
-│       │   └── architect.ts    # Main agent definition
+│       │   └── architect.ts    # Agent definition with PM/Engineer prompts
 │       ├── tools/
-│       │   └── file-tools.ts   # Document saving tools
+│       │   └── file-tools.ts   # saveDocumentTool, generateDiagramTool
 │       └── index.ts            # Mastra instance export
 ├── docs/                       # Generated documents saved here
 ├── run.ts                      # CLI entry point
@@ -384,14 +347,29 @@ Architect Agent/
 └── README.md
 ```
 
+### Components
+
+1. **Agent** (`src/mastra/agents/architect.ts`)
+   - Two personas: PM Mode & Principal Engineer Mode
+   - 5-question interview protocol
+   - Document generation with templates
+
+2. **Tools** (`src/mastra/tools/file-tools.ts`)
+   - `saveDocumentTool`: Saves markdown to `/docs`
+   - `generateDiagramTool`: Creates Mermaid.js diagrams
+
+3. **Memory** (LibSQL/SQLite)
+   - Persists conversation history
+   - Enables context-aware responses
+
 ---
 
 ## 🎯 Who Is This For?
 
 ### Product Managers
 
-- **Struggling to start a PRD?** Let the AI interview you with proven questions
-- **Missing key sections?** The template ensures comprehensive coverage
+- **Struggling to start a PRD?** AI interviews you with proven questions
+- **Missing key sections?** Template ensures comprehensive coverage
 - **Need consistency?** Same format every time
 
 ### Engineers
@@ -429,41 +407,32 @@ Architect Agent/
 
 ## 🛠️ Development
 
-### Running Modes
+### Commands
 
-| Command | Description | URL |
-|---------|-------------|-----|
-| `npm run architect` | CLI mode - terminal interview | N/A |
-| `npm run dev` | Mastra dev server with Playground UI | http://localhost:4111 |
-| `npm run build` | Build for production | N/A |
-| `npm run start` | Start production server | http://localhost:4111 |
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start Mastra Playground (http://localhost:4111) |
+| `npm run architect` | Run CLI interview mode |
+| `npm run architect:dev` | CLI with hot reload |
+| `npm run build` | Build for production |
+| `npm run start` | Start production server |
 
-### Mastra Dev Server Features
+### Adding New LLM Providers
 
-When you run `npm run dev`, you get:
+Mastra uses the [Vercel AI SDK](https://sdk.vercel.ai) for LLM provider abstraction:
 
-1. **Playground UI** - Visual interface to chat with agents
-2. **Hot Reload** - Changes to agents/tools auto-reload
-3. **REST API** - Full API for integrating with other apps
-4. **Logs Panel** - Real-time debugging logs
-5. **Tool Inspector** - See tool definitions and test them
-
-### Adding New Providers
-
-To add a new LLM provider:
-
-1. Install the AI SDK provider package
-2. Update `getModelConfig()` in `architect.ts`
-3. Add environment variable to `.env`
-
-Example for a new provider:
+```bash
+# Install a new provider
+npm install @ai-sdk/anthropic
+```
 
 ```typescript
-import { someProvider } from '@ai-sdk/some-provider';
+// Update src/mastra/agents/architect.ts
+import { anthropic } from '@ai-sdk/anthropic';
 
 function getModelConfig() {
-  if (process.env.SOME_PROVIDER_API_KEY) {
-    return someProvider('model-name');
+  if (process.env.ANTHROPIC_API_KEY) {
+    return anthropic('claude-3-5-sonnet-20241022');
   }
   // ... existing config
 }
@@ -473,10 +442,10 @@ function getModelConfig() {
 
 ## 🔐 Security Notes
 
-- **Never commit `.env` files** - They're in `.gitignore`
-- **Rotate leaked keys immediately** - Generate new ones if exposed
-- **Use environment variables** - Don't hardcode API keys
-- **The `.env.example` file** - Safe to commit (contains no real keys)
+- **Never commit `.env` files** — They're in `.gitignore`
+- **Rotate leaked keys immediately** — Generate new ones if exposed
+- **Use environment variables** — Don't hardcode API keys
+- **The `env.example` file** — Safe to commit (contains no real keys)
 
 ---
 
@@ -484,7 +453,7 @@ function getModelConfig() {
 
 - [Mastra Documentation](https://docs.mastra.ai)
 - [Mastra GitHub](https://github.com/mastra-ai/mastra)
-- [AI SDK Documentation](https://sdk.vercel.ai/docs)
+- [Vercel AI SDK Documentation](https://sdk.vercel.ai/docs)
 - [Ollama Cloud Models](https://ollama.com/blog/cloud-models)
 
 ---
@@ -501,12 +470,12 @@ Contributions welcome! Please:
 
 ## 📄 License
 
-MIT License - feel free to use this for your own projects!
+MIT License — feel free to use this for your own projects!
 
 ---
 
 ## 🙏 Acknowledgments
 
-- Built with [Mastra.ai](https://mastra.ai)
-- Powered by [Vercel AI SDK](https://sdk.vercel.ai)
-- LLM providers: Ollama, Groq, OpenAI, Anthropic, Google
+- **[Mastra.ai](https://mastra.ai)** — The AI agent framework
+- **[Vercel AI SDK](https://sdk.vercel.ai)** — LLM provider abstraction layer
+- **LLM Providers** — Ollama, Groq, OpenAI, Anthropic, Google
