@@ -8,31 +8,28 @@ Built with [Mastra.ai](https://mastra.ai) - a TypeScript framework for building 
 
 ## ✨ Features
 
-### Two Agents, One Workflow
+### Three Agents, One Workflow
 
 | Agent | Persona | Output |
 |-------|---------|--------|
 | **📋 Architect Agent** | Senior PM / Principal Engineer | PRDs & TDRs |
+| **⚛️ Frontend Architect Agent** | React/Next.js Expert | Frontend TDRs |
 | **🛠️ Story Builder Agent** | Senior Agile Coach | User Stories & Epics |
 
 ### Workflow Chain: PRD → TDR → Stories
 
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│ Architect Agent │ →  │ Architect Agent │ →  │ Story Builder   │
-│   (PRD Mode)    │    │   (TDR Mode)    │    │     Agent       │
-├─────────────────┤    ├─────────────────┤    ├─────────────────┤
-│ • User problems │    │ • Architecture  │    │ • Epics         │
-│ • Success KPIs  │    │ • Security      │    │ • User Stories  │
-│ • Requirements  │    │ • Scalability   │    │ • Acceptance    │
-│ • User stories  │    │ • Code examples │    │   Criteria      │
-│ • Timeline      │    │ • Pitfalls      │    │ • Test Cases    │
-│                 │    │                 │    │ • Sprint Plan   │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-       ↓                       ↓                      ↓
-   docs/*.md              docs/*.md           docs/stories/*.md
-                                                    +
-                                              Jira CSV Export
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│ Architect Agent │ →  │ Frontend Arch   │ →  │ Architect Agent │ →  │ Story Builder   │
+│   (PRD Mode)    │    │     Agent       │    │   (TDR Mode)    │    │     Agent       │
+├─────────────────┤    ├─────────────────┤    ├─────────────────┤    ├─────────────────┤
+│ • User problems │    │ • React patterns│    │ • Backend arch  │    │ • Epics         │
+│ • Success KPIs  │    │ • Next.js config│    │ • Security      │    │ • User Stories  │
+│ • Requirements  │    │ • Performance   │    │ • Scalability   │    │ • Test Cases    │
+│ • Timeline      │    │ • Accessibility │    │ • Code examples │    │ • Sprint Plan   │
+└─────────────────┘    └─────────────────┘    └─────────────────┘    └─────────────────┘
+       ↓                       ↓                      ↓                      ↓
+   docs/*.md              docs/*.md              docs/*.md           docs/stories/*.md
 ```
 
 ### Key Capabilities
@@ -45,6 +42,7 @@ Built with [Mastra.ai](https://mastra.ai) - a TypeScript framework for building 
 - **Jira Export**: Export user stories in Jira-compatible CSV
 - **Tech Stack Analysis**: Get recommendations based on your stack
 - **Multiple Export Formats**: Markdown, HTML, Confluence, Notion
+- **Frontend Best Practices**: React/Next.js patterns from [Vercel's agent-skills](https://github.com/vercel-labs/agent-skills)
 
 ---
 
@@ -242,6 +240,7 @@ function getModelConfig() {
 |---------------|---------|--------|
 | Generate PRD/TDR via terminal | `npm run architect` | CLI |
 | Generate PRD/TDR via web UI | `npm run dev` | http://localhost:4111 → Architect Agent |
+| Generate Frontend TDR | `npm run dev` | http://localhost:4111 → Frontend Architect Agent |
 | Generate User Stories | `npm run dev` | http://localhost:4111 → Story Builder Agent |
 | Auto-restart on changes | `npm run architect:dev` | CLI |
 
@@ -356,6 +355,49 @@ npm run architect
 
 ---
 
+## ⚛️ Frontend Architect Agent
+
+Specialized in React/Next.js architecture with **45 rules from [Vercel's agent-skills](https://github.com/vercel-labs/agent-skills/tree/main/skills/react-best-practices)**, prioritized by impact.
+
+```bash
+npm run dev  # Open http://localhost:4111 → Frontend Architect Agent
+```
+
+### Vercel Best Practices (8 Categories by Priority)
+
+| Priority | Category | Impact | Key Rules |
+|----------|----------|--------|-----------|
+| 1 | **Eliminating Waterfalls** | CRITICAL | `async-parallel`, `async-suspense-boundaries` |
+| 2 | **Bundle Size** | CRITICAL | `bundle-barrel-imports`, `bundle-dynamic-imports` |
+| 3 | **Server Performance** | HIGH | `server-serialization`, `server-cache-react` |
+| 4 | **Client Fetching** | MEDIUM-HIGH | `client-swr-dedup`, `client-passive-event-listeners` |
+| 5 | **Re-render Optimization** | MEDIUM | `rerender-functional-setstate`, `rerender-derived-state` |
+| 6 | **Rendering** | MEDIUM | `rendering-content-visibility`, `rendering-hydration-no-flicker` |
+| 7 | **JS Performance** | LOW-MEDIUM | `js-tosorted-immutable`, `js-index-maps` |
+| 8 | **Advanced Patterns** | LOW | `advanced-use-latest`, `advanced-event-handler-refs` |
+
+### Interview Questions (Detects Anti-Patterns)
+
+1. **Data Flow** - Detect sequential awaits, suggest `Promise.all()`
+2. **Bundle Size** - Detect barrel imports, suggest direct imports
+3. **Server/Client** - Detect over-serialization, suggest minimal props
+4. **State & Re-renders** - Detect stale closures, suggest functional setState
+5. **Performance** - Detect missing `content-visibility`, hydration flicker
+
+### Frontend TDR Output
+
+- Technology stack table with rationale
+- Project structure (App Router, feature-based folders)
+- Component hierarchy diagram (Mermaid)
+- Server vs Client component patterns with code
+- State management architecture
+- Performance optimization techniques
+- Accessibility implementation
+- Testing strategy with examples
+- Common pitfalls & solutions
+
+---
+
 ## 🛠️ Story Builder Agent
 
 Transforms PRDs/TDRs into implementation-ready user stories with acceptance criteria, test cases, and sprint plans.
@@ -422,20 +464,20 @@ architect-agent/
 ├── src/
 │   └── mastra/
 │       ├── agents/
-│       │   ├── architect.ts      # Document Architect (PRD/TDR)
-│       │   └── story-builder.ts  # Story Builder (User Stories)
+│       │   ├── architect.ts           # Document Architect (PRD/TDR)
+│       │   ├── frontend-architect.ts  # Frontend Architect (React/Next.js)
+│       │   └── story-builder.ts       # Story Builder (User Stories)
 │       ├── tools/
-│       │   ├── file-tools.ts     # PRD/TDR tools + export formats
-│       │   └── story-tools.ts    # Story tools + Jira export
+│       │   ├── file-tools.ts          # PRD/TDR tools + export formats
+│       │   └── story-tools.ts         # Story tools + Jira export
 │       ├── workflows/
-│       │   └── story-builder-workflow.ts  # Story generation workflow
-│       └── index.ts              # Mastra instance export
-├── docs/                         # Generated PRDs/TDRs saved here
-│   ├── stories/                  # Generated user stories
-│   └── exports/                  # HTML, Confluence, Jira exports
-├── run.ts                        # CLI entry point
-├── env.example                   # Environment template
-├── package.json
+│       │   └── story-builder-workflow.ts
+│       └── index.ts                   # Mastra instance export
+├── docs/                              # Generated documents
+│   ├── stories/                       # User stories
+│   └── exports/                       # HTML, Confluence, Jira
+├── run.ts                             # CLI entry point
+├── env.example
 └── README.md
 ```
 
