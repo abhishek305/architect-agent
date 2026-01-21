@@ -61,7 +61,7 @@ Built with [Mastra.ai](https://mastra.ai) - a TypeScript framework for building 
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/document-architect.git
+git clone https://github.com/abhishek305/document-architect.git
 cd document-architect
 
 # Install dependencies
