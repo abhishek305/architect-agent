@@ -1,0 +1,21 @@
+{
+  "projectName": "Customer Feedback Portal",
+  "mode": "ALL",
+  
+  "context": "Centralized feedback system for enterprise customers. Currently using scattered email/Zendesk. NPS dropped from 45 to 38. Q2 priority with $75K budget.",
+  
+  "interviewAnswers": {
+    "problem": "Feedback gets lost across email, Slack, and Zendesk. Product team misses critical customer pain points.",
+    "targetUser": "Customer Success Managers tracking account feedback. Product Managers identifying feature patterns.",
+    "successMetrics": "NPS back to 45+ in 6 months. 80% enterprise adoption in 90 days.",
+    "mvpScope": "Feedback form, status tracking, admin dashboard, email notifications.",
+    "architecture": "Next.js frontend, Node.js API, PostgreSQL. Integrate with Zendesk and Salesforce.",
+    "security": "SSO via Okta, role-based access, audit logging. SOC2 compliance required."
+  },
+  
+  "techStack": ["Next.js", "Node.js", "PostgreSQL", "Redis", "Tailwind CSS"],
+  "hasFrontend": true,
+  "teamContext": { "velocity": 18, "sprintDuration": 2, "teamSize": 3 },
+  "jiraProjectKey": "FEEDBACK",
+  "author": "Product Team"
+}

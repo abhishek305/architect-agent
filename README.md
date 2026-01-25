@@ -8,13 +8,18 @@ Built with [Mastra.ai](https://mastra.ai) - a TypeScript framework for building 
 
 ## ✨ Features
 
-### Three Agents, One Workflow
+### Three Agents, Two Workflows
 
 | Agent | Persona | Output |
 |-------|---------|--------|
 | **📋 Architect Agent** | Senior PM / Principal Engineer | PRDs & TDRs |
 | **⚛️ Frontend Architect Agent** | React/Next.js Expert | Frontend TDRs |
 | **🛠️ Story Builder Agent** | Senior Agile Coach | User Stories & Epics |
+
+| Workflow | Mode | Use Case |
+|----------|------|----------|
+| **Story Builder Workflow** | Interactive | Generate stories from existing docs |
+| **Document Architect Pipeline** | Automated | Full end-to-end generation (CI/CD) |
 
 ### Workflow Chain: PRD → TDR → Stories
 
@@ -43,6 +48,20 @@ Built with [Mastra.ai](https://mastra.ai) - a TypeScript framework for building 
 - **Tech Stack Analysis**: Get recommendations based on your stack
 - **Multiple Export Formats**: Markdown, HTML, Confluence, Notion
 - **Frontend Best Practices**: React/Next.js patterns from [Vercel's agent-skills](https://github.com/vercel-labs/agent-skills)
+
+### ⚠️ User Priority Principle
+
+**Your explicit choices drive the document. Gaps are filled with expert recommendations.**
+
+All agents follow this balanced hierarchy:
+1. **EXPLICIT USER REQUIREMENTS (Non-negotiable)**: If you specify it, the agent uses it exactly
+2. **GAPS IN REQUIREMENTS (Agent Expertise)**: If you don't specify, the agent recommends best practices
+3. **COMPLEMENTARY VALUE (Always)**: Agent adds security, performance, and accessibility—without overriding
+
+**Examples:**
+- You say "Redux Toolkit" → Agent uses Redux Toolkit, adds RTK Query patterns
+- You don't mention testing → Agent includes comprehensive testing strategy
+- You're vague about architecture → Agent proposes well-reasoned options
 
 ---
 
@@ -238,10 +257,11 @@ function getModelConfig() {
 
 | What You Want | Command | Access |
 |---------------|---------|--------|
-| Generate PRD/TDR via terminal | `npm run architect` | CLI |
+| Generate PRD/TDR via terminal | `npm run architect` | CLI (interactive) |
 | Generate PRD/TDR via web UI | `npm run dev` | http://localhost:4111 → Architect Agent |
 | Generate Frontend TDR | `npm run dev` | http://localhost:4111 → Frontend Architect Agent |
 | Generate User Stories | `npm run dev` | http://localhost:4111 → Story Builder Agent |
+| **Full automation pipeline** | `npm run architect:auto` | CLI (non-interactive) |
 | Auto-restart on changes | `npm run architect:dev` | CLI |
 
 ### Option 1: CLI Mode
@@ -256,7 +276,151 @@ npm run architect
 npm run architect:dev
 ```
 
-### Option 2: Mastra Playground (Web UI)
+### Option 2: Automation Pipeline (No Interaction)
+
+For CI/CD integration or batch processing, use the automation pipeline:
+
+```bash
+# Run with a config file
+npm run architect:auto -- --config configs/examples/full-example.json
+
+# Pipe JSON directly
+cat configs/examples/quick-start.json | npm run architect:auto
+
+# View help
+npm run architect:auto -- --help
+```
+
+**Pipeline Output:**
+- `docs/[project]-prd-YYYY-MM-DD.md` — PRD document
+- `docs/[project]-tdr-YYYY-MM-DD.md` — TDR document
+- `docs/[project]-frontend-tdr-YYYY-MM-DD.md` — Frontend TDR (if `hasFrontend: true`)
+- `docs/stories/[project]-stories-YYYY-MM-DD.md` — User stories
+- `docs/exports/[project]-jira-YYYY-MM-DD.csv` — Jira import (if `jiraProjectKey` provided)
+
+---
+
+### Configuration Schema (v2 - Flexible)
+
+The config schema supports **flexible, free-form context** that real PMs and engineers actually have.
+
+#### Minimal Config (Quick Start)
+
+Just a project name and context is enough:
+
+```json
+{
+  "projectName": "AI Code Review Bot",
+  "context": "Slack bot that reviews PRs using GPT-4. Posts summary + suggestions in thread. Team of 3, 2-week timeline.",
+  "techStack": ["Node.js", "Slack Bolt", "OpenAI API"]
+}
+```
+
+#### Full Config with Interview Answers
+
+Pre-answer interview questions to skip the interactive flow:
+
+```json
+{
+  "projectName": "Customer Feedback Portal",
+  "mode": "ALL",
+  
+  "context": "After our Q2 review, leadership prioritized customer feedback. Currently using email threads and Zendesk - no unified view. NPS dropped from 45 to 38.",
+  
+  "sourceDocuments": [
+    "docs/user-research-summary.md",
+    "notes/architecture-meeting.md"
+  ],
+  
+  "interviewAnswers": {
+    "problem": "No centralized system for feedback. Product doesn't see support tickets.",
+    "targetUser": "Customer Success Managers (primary), Product Managers (secondary)",
+    "successMetrics": "NPS back to 45+ in 6 months, 50% reduction in lost feedback",
+    "mvpScope": "Feedback form, status tracking, admin dashboard, email notifications",
+    "businessContext": "Q2 priority, $75K budget, 3-person team"
+  },
+  
+  "techStack": ["Next.js", "PostgreSQL", "Redis"],
+  "hasFrontend": true,
+  "teamContext": { "velocity": 18, "sprintDuration": 2, "teamSize": 3 },
+  "jiraProjectKey": "FEEDBACK"
+}
+```
+
+#### Config Schema Reference
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `projectName` | string | **Yes** | Project name (used in filenames) |
+| `context` | string | Recommended | Free-form project context (the main input) |
+| `sourceDocuments` | string[] | No | Paths to existing docs to read as context |
+| `interviewAnswers` | object | No | Pre-answered interview questions |
+| `mode` | enum | No | `PRD`, `TDR`, `FRONTEND_TDR`, `STORIES`, or `ALL` |
+| `techStack` | string[] | Recommended | Technologies being used |
+| `hasFrontend` | boolean | No | Generate Frontend TDR? (default: false) |
+| `teamContext` | object | No | `{ velocity, sprintDuration, teamSize }` |
+| `jiraProjectKey` | string | No | Project key for Jira CSV export |
+| `author` | string | No | Document author name |
+
+#### Interview Answer Keys
+
+| PRD Questions | TDR Questions | Frontend Questions |
+|---------------|---------------|-------------------|
+| `problem` | `architecture` | `renderingStrategy` |
+| `targetUser` | `security` | `stateManagement` |
+| `successMetrics` | `scale` | `bundleStrategy` |
+| `mvpScope` | `deployment` | `performanceTargets` |
+| `businessContext` | `integrations` | `accessibility` |
+
+**Custom keys are allowed** - add any domain-specific context.
+
+#### ⚠️ Ensuring Your Requirements Are Respected
+
+If you need specific technologies, be **explicit** in your config:
+
+```json
+{
+  "context": "**CRITICAL TECH STACK (DO NOT CHANGE):**\n- Framework: React SPA with Vite (NOT Next.js)\n- State: Redux Toolkit (NOT Zustand)\n- Styling: Styled Components (NOT Tailwind)\n\nDO NOT substitute these with your preferences.",
+  
+  "interviewAnswers": {
+    "renderingStrategy": "React SPA with Vite - NOT Next.js. Client-side rendering only.",
+    "stateManagement": "Redux Toolkit with RTK Query - NOT Zustand, NOT standalone React Query"
+  }
+}
+```
+
+**Tips:**
+- Use `CRITICAL:` or `DO NOT use:` prefixes for non-negotiable choices
+- Repeat tech requirements in both `context` and `interviewAnswers`
+- The agents will warn about potential issues but WILL NOT override your choices
+
+#### Example Configs
+
+See `configs/examples/` for ready-to-use templates:
+
+| Config | Use Case |
+|--------|----------|
+| `quick-start.json` | Minimal config (just name + context + tech stack) |
+| `full-example.json` | Comprehensive config showing all options |
+
+#### Legacy Config (v1 - Still Supported)
+
+Old configs with `description` + `requirements` still work:
+
+```json
+{
+  "projectName": "API Gateway",
+  "description": "REST API gateway service",
+  "requirements": ["auth", "rate-limiting"],
+  "techStack": ["Node.js", "Redis"]
+}
+```
+
+The `description` is converted to `context`, and `requirements` to `interviewAnswers.mvpScope`.
+
+---
+
+### Option 3: Mastra Playground (Web UI)
 
 Mastra includes a built-in **Playground UI** for interacting with agents visually.
 
@@ -326,6 +490,48 @@ Q1 - Architecture Overview:
 ✅ TDR Generated Successfully!
 📄 Saved to: docs/collaborative-document-editor-tdr-2026-01-12.md
 ```
+
+### Interactive Mode with Pre-loaded Context
+
+Skip the interview by pasting context directly. Works in CLI or Mastra Playground:
+
+```
+You: Generate a PRD with this context:
+
+## Pre-loaded Context
+
+**Project:** Mobile Banking App Redesign
+
+**Problem:** Our mobile app has a 2.3-star rating. Users complain about:
+- 6+ taps to transfer money
+- No biometric login
+- Slow load times (8+ seconds)
+
+**Target Users:** Retail banking customers, ages 25-45.
+
+**Success Metrics:** 
+- App store rating: 2.3 → 4.0+ within 6 months
+- Transfer completion rate: 45% → 85%
+
+**MVP Scope:** 
+- Biometric login
+- 3-tap money transfer
+- Redesigned dashboard
+- Performance optimization (<3s load)
+
+Agent: I see you've provided comprehensive context. I have a few clarifying questions:
+
+1. For "3-tap transfer" - should this include verification step?
+2. For accessibility - do you have an existing audit?
+
+Once you confirm, I'll generate the complete PRD.
+```
+
+The agent detects pre-loaded context and:
+- Acknowledges the provided information
+- Skips already-answered questions
+- Asks only for missing details
+- Proceeds directly to generation if complete
 
 ---
 
@@ -462,21 +668,33 @@ Parse Doc → Generate Epics → Create Stories → Add Details → Sprint Plan 
 ```
 architect-agent/
 ├── src/
-│   └── mastra/
-│       ├── agents/
-│       │   ├── architect.ts           # Document Architect (PRD/TDR)
-│       │   ├── frontend-architect.ts  # Frontend Architect (React/Next.js)
-│       │   └── story-builder.ts       # Story Builder (User Stories)
-│       ├── tools/
-│       │   ├── file-tools.ts          # PRD/TDR tools + export formats
-│       │   └── story-tools.ts         # Story tools + Jira export
-│       ├── workflows/
-│       │   └── story-builder-workflow.ts
-│       └── index.ts                   # Mastra instance export
-├── docs/                              # Generated documents
-│   ├── stories/                       # User stories
-│   └── exports/                       # HTML, Confluence, Jira
-├── run.ts                             # CLI entry point
+│   ├── mastra/
+│   │   ├── agents/
+│   │   │   ├── architect.ts                  # Document Architect (PRD/TDR)
+│   │   │   ├── frontend-architect.ts         # Frontend Architect (React/Next.js)
+│   │   │   └── story-builder.ts              # Story Builder (User Stories)
+│   │   ├── tools/
+│   │   │   ├── file-tools.ts                 # PRD/TDR tools + export formats
+│   │   │   └── story-tools.ts                # Story tools + Jira export
+│   │   ├── workflows/
+│   │   │   ├── story-builder-workflow.ts     # Story generation workflow
+│   │   │   └── document-architect-pipeline.ts # Master automation pipeline
+│   │   └── index.ts                          # Mastra instance export
+│   ├── types/
+│   │   └── config.ts                         # ProjectConfigV2 interface
+│   └── utils/
+│       ├── document-reader.ts                # Read source documents
+│       └── context-builder.ts                # Build prompts from context
+├── cli/
+│   └── architect-auto.ts                     # Automation CLI (no interaction)
+├── configs/
+│   └── examples/
+│       ├── quick-start.json                  # Minimal quick-start (5 lines)
+│       └── full-example.json                 # Comprehensive example (22 lines)
+├── docs/                                     # Generated documents
+│   ├── stories/                              # User stories
+│   └── exports/                              # HTML, Confluence, Jira
+├── run.ts                                    # Interactive CLI entry point
 ├── env.example
 └── README.md
 ```
@@ -509,11 +727,67 @@ architect-agent/
 
 | Command | Description |
 |---------|-------------|
-| `npm run architect` | CLI mode |
+| `npm run architect` | Interactive CLI mode |
+| `npm run architect:auto` | Automation pipeline (no interaction) |
 | `npm run dev` | Web UI at http://localhost:4111 |
 | `npm run build` | Build for production |
 
 **Adding new LLM providers:** Install the AI SDK package, update `getModelConfig()` in `architect.ts`, add env variable.
+
+### Automation Pipeline Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                  Document Architect Pipeline                     │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Input (JSON config)                                             │
+│         │                                                        │
+│         ▼                                                        │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐          │
+│  │ Step 1: PRD │ →  │ Step 2: TDR │ →  │ Step 3:     │          │
+│  │ Generator   │    │ Generator   │    │ Frontend TDR│ (if set) │
+│  └─────────────┘    └─────────────┘    └─────────────┘          │
+│                            │                  │                  │
+│                            └────────┬─────────┘                  │
+│                                     ▼                            │
+│                          ┌─────────────────┐                     │
+│                          │ Step 4: Stories │                     │
+│                          │ Generator       │                     │
+│                          └─────────────────┘                     │
+│                                     │                            │
+│                                     ▼                            │
+│                          ┌─────────────────┐                     │
+│                          │ Step 5: Export  │                     │
+│                          │ (Jira CSV, etc) │                     │
+│                          └─────────────────┘                     │
+│                                     │                            │
+│                                     ▼                            │
+│                              Output Files                        │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**CI/CD Integration Example (GitHub Actions):**
+
+```yaml
+name: Generate Docs
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  generate:
+    if: contains(github.event.label.name, 'needs-docs')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm install
+      - run: npm run architect:auto -- --config configs/project.json
+      - uses: peter-evans/create-pull-request@v5
+        with:
+          title: "docs: Add generated documentation"
+```
 
 ---
 

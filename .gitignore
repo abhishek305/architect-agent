@@ -32,6 +32,7 @@ output.txt
 # IDE
 .idea/
 .vscode/
+.cursor/
 *.swp
 *.swo
 *~
@@ -58,3 +59,4 @@ docs/*-tdr-*.md
 docs/*-adr-*.md
 docs/stories/
 docs/exports/
+RELEASE-NOTES-v*.md
