@@ -1,0 +1,5 @@
+{
+  "projectName": "AI Code Review Bot",
+  "context": "Slack bot that reviews PRs using GPT-4. Posts summary + suggestions in thread. Auto-triggered on PR open. Team of 3, 2-week timeline. Must handle private repos securely.",
+  "techStack": ["Node.js", "Slack Bolt", "OpenAI API", "GitHub API"]
+}

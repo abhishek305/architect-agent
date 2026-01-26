@@ -287,7 +287,100 @@ docs/smart-notification-system-tdr-YYYY-MM-DD.md
 
 ---
 
-## Phase 3: Story Builder Agent
+## Phase 3: Frontend Architect Agent
+
+For frontend-heavy applications, use the specialized Frontend Architect Agent.
+
+### Start the Frontend Architect
+
+```bash
+npm run dev
+# Open http://localhost:4111 → Agents → Frontend Architect Agent
+```
+
+### Test Conversation
+
+**Agent asks:** Tell me about the frontend you're building.
+
+**Q1 - Application Overview:**
+```
+We're building a notification dashboard for our Smart Notification System. 
+It's primarily a dashboard app with real-time updates. Expected 5,000 daily active users,
+with medium interaction complexity - users will be viewing, filtering, and managing 
+notifications. Some light admin functionality for notification preferences.
+```
+
+**Q2 - Component Architecture:**
+```
+We're planning to use a shared component library for the entire company. The main hierarchy:
+
+- App Shell (Header, Sidebar, Main Content)
+- Dashboard Page (NotificationList, FilterBar, MetricsCards)
+- Settings Page (PreferencesForm, ChannelToggles)
+- Shared Components (Button, Card, Modal, Toast)
+
+We'll have about 30 reusable components. Using compound component pattern for 
+complex UI like dropdowns and modals.
+```
+
+**Q3 - Data Fetching & State:**
+```
+We're using React Query for server state management:
+- Notifications list with infinite scroll
+- User preferences (cached for 5 minutes)
+- Real-time updates via WebSocket for new notifications
+
+For UI state:
+- Zustand for global UI state (sidebar collapsed, theme)
+- useState for local component state (modal open, form inputs)
+
+We need optimistic updates when marking notifications as read.
+```
+
+**Q4 - Performance Strategy:**
+```
+Performance targets:
+- LCP < 2s (hero is the notification list)
+- CLS < 0.1 (fixed height notification cards)
+- FID < 100ms
+
+We'll lazy load the settings page and admin features.
+Using next/image for user avatars.
+Virtualized list for notifications (react-window).
+```
+
+**Q5 - Testing & Quality:**
+```
+Testing strategy:
+- Unit tests with Vitest for utilities and hooks
+- Component tests with React Testing Library
+- E2E with Playwright for critical flows (login, view notifications, mark as read)
+- Accessibility: jest-axe in component tests, manual audits with axe DevTools
+
+We want 80% component test coverage for the shared library.
+```
+
+### Expected Output
+
+The agent should generate a Frontend TDR saved to:
+```
+docs/smart-notification-system-frontend-tdr-YYYY-MM-DD.md
+```
+
+### Verify Frontend TDR Contains:
+- [ ] Technology stack table with rationale
+- [ ] Project structure (App Router format)
+- [ ] Component hierarchy diagram (Mermaid)
+- [ ] Server vs Client component patterns with code examples
+- [ ] State management architecture (Zustand + React Query)
+- [ ] **Vercel Best Practices Checklist** (45 rules across 8 priorities)
+- [ ] Common pitfalls with Vercel rule references (e.g., `→ async-parallel`)
+- [ ] Accessibility implementation (focus management, forms)
+- [ ] Testing strategy with code examples
+
+---
+
+## Phase 4: Story Builder Agent
 
 ### Start the Story Builder
 
@@ -372,7 +465,7 @@ docs/exports/notify-stories-jira-YYYY-MM-DD.csv
 
 ---
 
-## Phase 4: Test Additional Tools
+## Phase 5: Test Additional Tools
 
 ### Test Tech Stack Analyzer
 
@@ -437,6 +530,18 @@ docs/exports/smart-notification-system-html-YYYY-MM-DD.html
 - [ ] Common pitfalls included
 - [ ] File saved to /docs/
 
+### Frontend Architect Agent
+- [ ] 5 questions asked about frontend architecture
+- [ ] Technology stack table with rationale
+- [ ] Component hierarchy diagram (Mermaid)
+- [ ] Server vs Client component patterns
+- [ ] State management code examples (Zustand, React Query)
+- [ ] Performance optimization section
+- [ ] Accessibility implementation
+- [ ] Testing strategy with code
+- [ ] Common pitfalls included
+- [ ] File saved to /docs/
+
 ### Story Builder Agent
 - [ ] Lists available documents
 - [ ] Reads PRD/TDR successfully
@@ -453,6 +558,62 @@ docs/exports/smart-notification-system-html-YYYY-MM-DD.html
 - [ ] exportDocumentTool creates HTML
 - [ ] exportDocumentTool creates Confluence markup
 - [ ] exportToJiraTool creates valid CSV
+
+### Automation Pipeline
+- [ ] CLI runs with quick-start.json config
+- [ ] CLI runs with full-example.json config
+- [ ] All 5 documents generated (PRD, TDR, Frontend TDR, Stories, Jira CSV)
+- [ ] User-specified tech stack respected (not overridden)
+- [ ] Summary shows correct epic/story/points count
+
+---
+
+## Phase 5: Automation Pipeline (Non-Interactive)
+
+For CI/CD integration or batch document generation, use the automation CLI.
+
+### Test with Quick Start Config
+
+```bash
+# Using faster model (recommended)
+OLLAMA_MODEL=llama3.3:70b-cloud npm run architect:auto -- --config configs/examples/quick-start.json
+```
+
+### Test with Full Example Config
+
+```bash
+# Full pipeline with all options
+OLLAMA_MODEL=llama3.3:70b-cloud npm run architect:auto -- --config configs/examples/full-example.json
+```
+
+### Expected Output
+
+```
+📐 Document Architect - Automation Pipeline
+
+✓ PRD saved to: docs/<project>-prd-<date>.md
+✓ TDR saved to: docs/<project>-tdr-<date>.md
+✓ Frontend TDR saved to: docs/<project>-frontend-tdr-<date>.md
+✓ Stories saved to: docs/stories/<project>-stories-<date>.md
+✓ Jira CSV saved to: docs/exports/<project>-jira-<date>.csv
+
+✅ Pipeline completed successfully!
+
+📊 Summary:
+  • Epics: X
+  • User Stories: Y
+  • Total Story Points: Z
+  • Estimated Sprints: N
+```
+
+### Verification Steps
+
+- [ ] PRD generated with correct project name
+- [ ] TDR generated with specified tech stack (not overridden by model)
+- [ ] Frontend TDR generated (if `hasFrontend: true`)
+- [ ] Stories generated with epics and user stories
+- [ ] Jira CSV generated (if `jiraProjectKey` provided)
+- [ ] User-specified tech stack respected (User Priority Principle)
 
 ---
 
@@ -490,4 +651,4 @@ The CSV is UTF-8 encoded. Import to Jira with UTF-8 selected.
 
 ---
 
-*Test Scenario v1.0 - Generated for Document Architect*
+*Test Scenario v1.2 - Generated for Document Architect (includes Frontend Architect Agent + Automation Pipeline)*

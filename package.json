@@ -1,12 +1,13 @@
 {
   "name": "architect-agent",
-  "version": "1.0.0",
-  "description": "AI-powered Document Architect for generating PRDs and TDRs using Architect Agent",
+  "version": "1.1.0",
+  "description": "AI-powered Document Architect for generating PRDs, TDRs, Frontend TDRs, and User Stories.",
   "main": "index.js",
   "type": "module",
   "scripts": {
     "architect": "npx tsx run.ts",
     "architect:dev": "npx tsx --watch run.ts",
+    "architect:auto": "npx tsx cli/architect-auto.ts",
     "dev": "mastra dev",
     "build": "mastra build",
     "start": "mastra start",
@@ -18,10 +19,15 @@
     "prd-generator",
     "tdr-generator",
     "document-architect",
+    "user-stories",
+    "frontend-architecture",
+    "react-best-practices",
     "llm",
     "ollama",
     "groq",
-    "openai"
+    "openai",
+    "automation",
+    "ci-cd"
   ],
   "author": "",
   "license": "MIT",
