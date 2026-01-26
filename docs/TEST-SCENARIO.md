@@ -559,6 +559,62 @@ docs/exports/smart-notification-system-html-YYYY-MM-DD.html
 - [ ] exportDocumentTool creates Confluence markup
 - [ ] exportToJiraTool creates valid CSV
 
+### Automation Pipeline
+- [ ] CLI runs with quick-start.json config
+- [ ] CLI runs with full-example.json config
+- [ ] All 5 documents generated (PRD, TDR, Frontend TDR, Stories, Jira CSV)
+- [ ] User-specified tech stack respected (not overridden)
+- [ ] Summary shows correct epic/story/points count
+
+---
+
+## Phase 5: Automation Pipeline (Non-Interactive)
+
+For CI/CD integration or batch document generation, use the automation CLI.
+
+### Test with Quick Start Config
+
+```bash
+# Using faster model (recommended)
+OLLAMA_MODEL=llama3.3:70b-cloud npm run architect:auto -- --config configs/examples/quick-start.json
+```
+
+### Test with Full Example Config
+
+```bash
+# Full pipeline with all options
+OLLAMA_MODEL=llama3.3:70b-cloud npm run architect:auto -- --config configs/examples/full-example.json
+```
+
+### Expected Output
+
+```
+📐 Document Architect - Automation Pipeline
+
+✓ PRD saved to: docs/<project>-prd-<date>.md
+✓ TDR saved to: docs/<project>-tdr-<date>.md
+✓ Frontend TDR saved to: docs/<project>-frontend-tdr-<date>.md
+✓ Stories saved to: docs/stories/<project>-stories-<date>.md
+✓ Jira CSV saved to: docs/exports/<project>-jira-<date>.csv
+
+✅ Pipeline completed successfully!
+
+📊 Summary:
+  • Epics: X
+  • User Stories: Y
+  • Total Story Points: Z
+  • Estimated Sprints: N
+```
+
+### Verification Steps
+
+- [ ] PRD generated with correct project name
+- [ ] TDR generated with specified tech stack (not overridden by model)
+- [ ] Frontend TDR generated (if `hasFrontend: true`)
+- [ ] Stories generated with epics and user stories
+- [ ] Jira CSV generated (if `jiraProjectKey` provided)
+- [ ] User-specified tech stack respected (User Priority Principle)
+
 ---
 
 ## 🐛 Troubleshooting
@@ -595,4 +651,4 @@ The CSV is UTF-8 encoded. Import to Jira with UTF-8 selected.
 
 ---
 
-*Test Scenario v1.1 - Generated for Document Architect (includes Frontend Architect Agent)*
+*Test Scenario v1.2 - Generated for Document Architect (includes Frontend Architect Agent + Automation Pipeline)*
