@@ -5,12 +5,10 @@ import { architectAgent } from './agents/architect';
 import { storyBuilderAgent } from './agents/story-builder';
 import { frontendArchitectAgent } from './agents/frontend-architect';
 import { storyBuilderWorkflow } from './workflows/story-builder-workflow';
-import { documentArchitectPipeline } from './workflows/document-architect-pipeline';
 
 export const mastra = new Mastra({
   workflows: { 
     storyBuilderWorkflow,         // Transforms PRD/TDR into user stories
-    documentArchitectPipeline,    // Master pipeline: PRD → TDR → Frontend TDR → Stories
   },
   agents: { 
     architectAgent,          // Document Architect Agent for PRD/TDR generation
@@ -36,7 +34,6 @@ export { frontendArchitectAgent } from './agents/frontend-architect';
 
 // Export workflows
 export { storyBuilderWorkflow } from './workflows/story-builder-workflow';
-export { documentArchitectPipeline } from './workflows/document-architect-pipeline';
 
 // Export tools for external use
 export { 

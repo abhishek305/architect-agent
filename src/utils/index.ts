@@ -25,3 +25,15 @@ export {
   type ContextBuilderOptions,
   type BuiltContext,
 } from './context-builder';
+
+// Model configuration
+export {
+  getModelConfig,
+  type ModelConfig,
+} from './model-config';
+
+// Jira export utilities
+export {
+  generateJiraCSV,
+  countStoriesAndEpics,
+} from './jira-export';

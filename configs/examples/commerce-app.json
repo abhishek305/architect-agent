@@ -1,0 +1,50 @@
+{
+  "projectName": "ShopFlow - E-Commerce Platform",
+  "mode": "ALL",
+  "context": "Building a modern e-commerce platform for small-to-medium businesses. Key features: product catalog, shopping cart, checkout with Stripe, user accounts, order management, inventory tracking, and admin dashboard. Target: 10K concurrent users, mobile-first responsive design.\n\n**CRITICAL TECH STACK (DO NOT SUBSTITUTE):**\n- Frontend: React.js SPA (NOT Next.js), Redux Toolkit for state, Styled Components for styling\n- Backend: Go with Gin framework\n- Cloud: Azure (AKS, Azure SQL, Blob Storage, CDN)",
+  "interviewAnswers": {
+    "problem": "SMBs struggle with expensive, complex e-commerce platforms. Shopify is costly, WooCommerce requires PHP expertise. We need a modern, scalable, cost-effective solution.",
+    "targetUser": "Small-to-medium business owners selling physical/digital products online. Non-technical users who need simple admin UI, developers who need API access.",
+    "successMetrics": "1000 active stores in 6 months, 99.9% uptime, checkout conversion >3%, page load <2s, cart abandonment <60%",
+    "mvpScope": "Phase 1: Product catalog, cart, Stripe checkout, user auth, order history. Phase 2: Inventory, coupons, analytics. Phase 3: Multi-vendor, subscriptions.",
+    "businessContext": "Seed-funded startup, $150K runway. Team: 2 Backend (Go), 2 Frontend (React), 1 DevOps. Timeline: MVP in 12 weeks.",
+    "architecture": "Monorepo with separate frontend/backend. Frontend: React SPA with Vite. Backend: Go microservices (Gin). Database: Azure SQL. Cache: Redis. Queue: Azure Service Bus. Storage: Azure Blob. CDN: Azure CDN.",
+    "security": "OAuth 2.0 + JWT. PCI-DSS compliance for payments (Stripe handles card data). HTTPS everywhere. Input validation. SQL injection prevention. Rate limiting. CORS policy.",
+    "scale": "Start: single AKS cluster. Scale: horizontal pod autoscaling, read replicas, CDN for static assets. Target: 10K concurrent users, 1M products.",
+    "stateManagement": "Redux Toolkit with RTK Query for API calls. Slice per domain: cart, products, user, orders. Persist cart to localStorage.",
+    "styling": "Styled Components with theme provider. Design tokens for colors, spacing, typography. Mobile-first responsive breakpoints.",
+    "renderingStrategy": "React SPA with client-side rendering. Vite for bundling. Code splitting by route. Lazy load product images.",
+    "testing": "Jest + React Testing Library for frontend. Go testing package for backend. Playwright for E2E. Target: 80% coverage.",
+    "definitionOfDone": "- Code reviewed and merged\n- Unit tests passing (>80% coverage)\n- E2E tests passing\n- No ESLint/Go lint errors\n- Deployed to staging\n- QA sign-off\n- Performance budget met (<2s LCP)"
+  },
+  "techStack": [
+    "React 18",
+    "TypeScript",
+    "Redux Toolkit",
+    "RTK Query",
+    "Styled Components",
+    "Vite",
+    "React Router v6",
+    "Go 1.22",
+    "Gin",
+    "GORM",
+    "Azure Kubernetes Service (AKS)",
+    "Azure SQL",
+    "Azure Blob Storage",
+    "Azure CDN",
+    "Azure Service Bus",
+    "Redis",
+    "Stripe",
+    "Jest",
+    "React Testing Library",
+    "Playwright"
+  ],
+  "hasFrontend": true,
+  "teamContext": {
+    "velocity": 24,
+    "sprintDuration": 2,
+    "teamSize": 5
+  },
+  "jiraProjectKey": "SHOP",
+  "author": "ShopFlow Engineering"
+}

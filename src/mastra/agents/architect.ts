@@ -2,6 +2,7 @@ import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
 import { LibSQLStore } from '@mastra/libsql';
 import { saveDocumentTool, generateDiagramTool, analyzeStackTool, exportDocumentTool } from '../tools/file-tools';
+import { getModelConfig } from '../../utils/model-config';
 
 /**
  * USER PRIORITY PRINCIPLE
@@ -844,58 +845,6 @@ ${PM_INSTRUCTIONS}
 
 ${PRINCIPAL_ENGINEER_INSTRUCTIONS}
 `;
-
-/**
- * Get model configuration
- * 
- * Supports:
- * 1. Ollama Cloud Models (qwen3-coder:480b-cloud, gpt-oss:120b-cloud, etc.)
- *    - Requires: ollama signin && ollama pull <model>
- *    - Set OLLAMA_MODEL=qwen3-coder:480b-cloud
- * 
- * 2. Local Ollama models
- *    - Set OLLAMA_BASE_URL=http://localhost:11434
- *    - Set OLLAMA_MODEL=llama3
- * 
- * 3. Cloud-hosted Ollama (your own deployment)
- *    - Set OLLAMA_BASE_URL=https://your-ollama-instance.com
- *    - Set OLLAMA_MODEL=llama3
- * 
- * 4. Fallback to Groq (if no Ollama configured)
- *    - Set GROQ_API_KEY
- */
-function getModelConfig() {
-  const baseUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
-  const modelName = process.env.OLLAMA_MODEL || 'qwen3-coder:480b-cloud';
-  const apiKey = process.env.OLLAMA_API_KEY || 'ollama';
-
-  // Check if we should use Ollama (local or cloud models)
-  const useOllama = process.env.USE_OLLAMA === 'true' || 
-                    process.env.OLLAMA_MODEL?.includes('-cloud') ||
-                    process.env.OLLAMA_BASE_URL;
-
-  if (useOllama) {
-    return {
-      providerId: 'ollama',
-      modelId: modelName,
-      url: baseUrl.endsWith('/v1') ? baseUrl : `${baseUrl}/v1`,
-      apiKey: apiKey,
-    };
-  }
-
-  // Fallback to Groq if GROQ_API_KEY is set
-  if (process.env.GROQ_API_KEY) {
-    return 'groq/llama-3.3-70b-versatile';
-  }
-
-  // Default to Ollama cloud model
-  return {
-    providerId: 'ollama',
-    modelId: 'qwen3-coder:480b-cloud',
-    url: 'http://localhost:11434/v1',
-    apiKey: 'ollama',
-  };
-}
 
 /**
  * Architect Agent

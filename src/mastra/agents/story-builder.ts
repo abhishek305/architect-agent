@@ -8,6 +8,7 @@ import {
   exportToJiraTool,
   generateStoryDependencyTool,
 } from '../tools/story-tools';
+import { getModelConfig } from '../../utils/model-config';
 
 /**
  * USER PRIORITY PRINCIPLE
@@ -379,38 +380,6 @@ Always include:
 3. **Error Scenarios:** Network failures, auth issues, server errors
 `;
 
-/**
- * Get model configuration for Story Builder
- */
-function getModelConfig() {
-  const baseUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
-  const modelName = process.env.OLLAMA_MODEL || 'qwen3-coder:480b-cloud';
-  const apiKey = process.env.OLLAMA_API_KEY || 'ollama';
-
-  const useOllama = process.env.USE_OLLAMA === 'true' || 
-                    process.env.OLLAMA_MODEL?.includes('-cloud') ||
-                    process.env.OLLAMA_BASE_URL;
-
-  if (useOllama) {
-    return {
-      providerId: 'ollama',
-      modelId: modelName,
-      url: baseUrl.endsWith('/v1') ? baseUrl : `${baseUrl}/v1`,
-      apiKey: apiKey,
-    };
-  }
-
-  if (process.env.GROQ_API_KEY) {
-    return 'groq/llama-3.3-70b-versatile';
-  }
-
-  return {
-    providerId: 'ollama',
-    modelId: 'qwen3-coder:480b-cloud',
-    url: 'http://localhost:11434/v1',
-    apiKey: 'ollama',
-  };
-}
 
 /**
  * Story Builder Agent

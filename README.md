@@ -677,14 +677,15 @@ architect-agent/
 │   │   │   ├── file-tools.ts                 # PRD/TDR tools + export formats
 │   │   │   └── story-tools.ts                # Story tools + Jira export
 │   │   ├── workflows/
-│   │   │   ├── story-builder-workflow.ts     # Story generation workflow
-│   │   │   └── document-architect-pipeline.ts # Master automation pipeline
+│   │   │   └── story-builder-workflow.ts     # Story generation workflow
 │   │   └── index.ts                          # Mastra instance export
 │   ├── types/
 │   │   └── config.ts                         # ProjectConfigV2 interface
 │   └── utils/
 │       ├── document-reader.ts                # Read source documents
-│       └── context-builder.ts                # Build prompts from context
+│       ├── context-builder.ts                # Build prompts from context
+│       ├── model-config.ts                   # Shared LLM configuration
+│       └── jira-export.ts                    # Jira CSV generation
 ├── cli/
 │   └── architect-auto.ts                     # Automation CLI (no interaction)
 ├── configs/

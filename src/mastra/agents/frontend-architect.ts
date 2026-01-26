@@ -2,6 +2,7 @@ import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
 import { LibSQLStore } from '@mastra/libsql';
 import { saveDocumentTool, generateDiagramTool, analyzeStackTool, exportDocumentTool } from '../tools/file-tools';
+import { getModelConfig } from '../../utils/model-config';
 
 /**
  * USER PRIORITY PRINCIPLE
@@ -63,36 +64,6 @@ provide your expert recommendations proactively.
 NEVER silently substitute user choices. ALWAYS fill gaps with frontend excellence.
 `;
 
-// Re-use the model config from architect.ts
-function getModelConfig() {
-  const baseUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
-  const modelName = process.env.OLLAMA_MODEL || 'qwen3-coder:480b-cloud';
-  const apiKey = process.env.OLLAMA_API_KEY || 'ollama';
-
-  const useOllama = process.env.USE_OLLAMA === 'true' || 
-                    process.env.OLLAMA_MODEL?.includes('-cloud') ||
-                    process.env.OLLAMA_BASE_URL;
-
-  if (useOllama) {
-    return {
-      providerId: 'ollama',
-      modelId: modelName,
-      url: baseUrl.endsWith('/v1') ? baseUrl : `${baseUrl}/v1`,
-      apiKey: apiKey,
-    };
-  }
-
-  if (process.env.GROQ_API_KEY) {
-    return 'groq/llama-3.3-70b-versatile';
-  }
-
-  return {
-    providerId: 'ollama',
-    modelId: 'qwen3-coder:480b-cloud',
-    url: 'http://localhost:11434/v1',
-    apiKey: 'ollama',
-  };
-}
 
 /**
  * Context-Aware Instructions for Frontend Architect
