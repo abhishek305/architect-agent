@@ -6,6 +6,22 @@ Built with [Mastra.ai](https://mastra.ai) - a TypeScript framework for building 
 
 ---
 
+## 🆕 What's New
+
+**Architect Agent v2: review-ready documents, not just generated ones**
+
+- **Quality gate with automatic revision:** every PRD/TDR is checked for missing sections, unfilled template placeholders, Mermaid diagrams that won't render, and unclosed code blocks. In the automation pipeline, a failing document is sent back to the model once to fix; anything left is reported.
+- **Domain-neutral prompts:** the TDR template no longer embeds a worked example from one domain, so designs stay specific to *your* project. The prompt is less than half its previous size.
+- **Richer TDRs and PRDs:** new sections for Non-Goals, Non-Functional Requirements, Alternatives Considered (ADR-style), API Design, Observability, Deployment & Rollback, and Cost.
+- **Visible assumptions:** anything the agent fills in on its own is marked *(Assumption)* and listed, so you can tell your decisions from its suggestions.
+- **PRD-aware TDRs:** TDR mode finds your existing PRD in `/docs` and builds on it instead of re-asking.
+- **Cleaner output from local models:** strips `<think>` reasoning blocks, chat preambles, and whole-document code fences.
+- **Any provider via one env var:** `MODEL=openai/gpt-5.1`, `MODEL=anthropic/claude-sonnet-4-5`, `MODEL=google/gemini-2.5-pro`, and more.
+- **Fixes:** the TDR step now receives full PRD sections (numbered headings were never matched before), same-day documents are no longer overwritten, and the memory database stays inside the project.
+- **Tests:** `npm test` and `npm run typecheck`.
+
+---
+
 ## ✨ Features
 
 ### Three Agents, Two Workflows
@@ -83,8 +99,8 @@ All agents follow this balanced hierarchy:
 
 ```bash
 # Clone the repository
-git clone https://github.com/abhishek305/document-architect.git
-cd document-architect
+git clone https://github.com/abhishek305/architect-agent.git
+cd architect-agent
 
 # Install dependencies
 npm install
