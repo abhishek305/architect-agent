@@ -38,6 +38,11 @@ import {
   buildPromptContext
 } from '../src/utils/context-builder';
 import { generateJiraCSV } from '../src/utils/jira-export';
+import {
+  cleanGeneratedDocument,
+  generateDocumentWithQualityGate,
+  GeneratedDocument,
+} from '../src/utils/document-quality';
 
 // ANSI color codes for terminal output
 const colors = {
@@ -72,8 +77,13 @@ interface PipelineResult {
     stories: number;
     totalPoints: number;
   };
+  /** Quality issues remaining in the generated PRD/TDR after the revision pass */
+  qualityWarnings: string[];
   message: string;
 }
+
+// Tools are disabled in automation so the response text is the document itself
+const NO_TOOLS = { toolChoice: 'none' as const, maxSteps: 1 };
 
 /**
  * Load environment variables from .env file
@@ -323,6 +333,19 @@ async function executePipeline(config: PipelineConfig, quiet: boolean): Promise<
     }
   }
   
+  const qualityWarnings: string[] = [];
+  const recordQuality = (label: string, doc: GeneratedDocument) => {
+    const remaining = doc.report.issues.map(i => `${label}: [${i.severity}] ${i.message}`);
+    qualityWarnings.push(...remaining);
+    printProgress(
+      remaining.length === 0
+        ? `  ✓ ${label} passed quality checks${doc.revised ? ' after revision' : ''}`
+        : `  ⚠ ${label} has ${remaining.length} remaining quality issue(s)`,
+      quiet
+    );
+  };
+  const onProgress = (message: string) => printProgress(message, quiet);
+
   // Build context summary for logging
   const contextInfo = buildPromptContext(normalizedConfig);
   printProgress(`Context: ${contextInfo.sections.join(', ')} (${contextInfo.length} chars)`, quiet);
@@ -335,10 +358,9 @@ async function executePipeline(config: PipelineConfig, quiet: boolean): Promise<
   // Use context builder for PRD prompt
   const prdPrompt = buildPRDPrompt(normalizedConfig);
 
-  const prdResponse = await architectAgent.generate([
-    { role: 'user' as const, content: prdPrompt }
-  ]);
-  const prdContent = prdResponse.text;
+  const prd = await generateDocumentWithQualityGate(architectAgent, prdPrompt, 'PRD', onProgress);
+  recordQuality('PRD', prd);
+  const prdContent = prd.content;
   const prdFilename = `${sanitizedName}-prd-${timestamp}.md`;
   const prdPath = saveDocument(prdContent, prdFilename);
   
@@ -352,10 +374,9 @@ async function executePipeline(config: PipelineConfig, quiet: boolean): Promise<
   // Use context builder for TDR prompt
   const tdrPrompt = buildTDRPrompt(normalizedConfig, prdContent);
 
-  const tdrResponse = await architectAgent.generate([
-    { role: 'user' as const, content: tdrPrompt }
-  ]);
-  const tdrContent = tdrResponse.text;
+  const tdr = await generateDocumentWithQualityGate(architectAgent, tdrPrompt, 'TDR', onProgress);
+  recordQuality('TDR', tdr);
+  const tdrContent = tdr.content;
   const tdrFilename = `${sanitizedName}-tdr-${timestamp}.md`;
   const tdrPath = saveDocument(tdrContent, tdrFilename);
   
@@ -375,8 +396,8 @@ async function executePipeline(config: PipelineConfig, quiet: boolean): Promise<
 
     const frontendTdrResponse = await frontendArchitectAgent.generate([
       { role: 'user' as const, content: frontendTdrPrompt }
-    ]);
-    frontendTdrContent = frontendTdrResponse.text;
+    ], NO_TOOLS);
+    frontendTdrContent = cleanGeneratedDocument(frontendTdrResponse.text);
     const frontendTdrFilename = `${sanitizedName}-frontend-tdr-${timestamp}.md`;
     frontendTdrPath = saveDocument(frontendTdrContent, frontendTdrFilename);
     
@@ -402,8 +423,8 @@ async function executePipeline(config: PipelineConfig, quiet: boolean): Promise<
 
   const storiesResponse = await storyBuilderAgent.generate([
     { role: 'user' as const, content: storiesPrompt }
-  ]);
-  const storiesContent = storiesResponse.text;
+  ], NO_TOOLS);
+  const storiesContent = cleanGeneratedDocument(storiesResponse.text);
   const storiesFilename = `${sanitizedName}-stories-${timestamp}.md`;
   const storiesPath = saveDocument(storiesContent, storiesFilename, 'stories');
   
@@ -464,7 +485,10 @@ ${docsGenerated}
   • Epics: ${epicsCount}
   • User Stories: ${storiesCount}
   • Total Story Points: ${totalPoints}
-  • Estimated Sprints: ${Math.ceil(totalPoints / (teamContext?.velocity || 20))}`;
+  • Estimated Sprints: ${Math.ceil(totalPoints / (teamContext?.velocity || 20))}${qualityWarnings.length > 0 ? `
+
+⚠️  Quality warnings (review these sections manually):
+${qualityWarnings.map(w => `  • ${w}`).join('\n')}` : ''}`;
   
   return {
     success: true,
@@ -482,6 +506,7 @@ ${docsGenerated}
       stories: storiesCount,
       totalPoints,
     },
+    qualityWarnings,
     message,
   };
 }

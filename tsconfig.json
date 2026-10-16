@@ -11,6 +11,9 @@
     "outDir": "dist"
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "cli/**/*",
+    "tests/**/*",
+    "run.ts"
   ]
 }

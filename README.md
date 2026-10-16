@@ -39,7 +39,10 @@ Built with [Mastra.ai](https://mastra.ai) - a TypeScript framework for building 
 
 ### Key Capabilities
 
-- **Interactive Interview**: 5 focused questions per agent
+- **Interactive Interview**: 5 focused questions per agent; skips anything your context already answers
+- **Quality Gate**: Every PRD/TDR is checked for missing sections, unfilled placeholders, broken Mermaid, and unclosed code blocks — and revised automatically if it fails
+- **Visible Assumptions**: Gaps the agent fills are marked *(Assumption)* and listed, so you can see what was your call vs. the agent's
+- **PRD-aware TDRs**: In TDR mode the agent finds your existing PRD in `/docs` and builds on it instead of re-asking
 - **Conversation Memory**: Maintains context across sessions
 - **Rich Document Output**: Markdown with tables, Mermaid diagrams, code examples
 - **Automatic File Saving**: Documents saved to `/docs` folder
@@ -179,75 +182,26 @@ GROQ_API_KEY=gsk_your_api_key_here
 
 ---
 
-### Option 4: OpenAI (Paid)
+### Option 4: OpenAI, Anthropic, Google Gemini, and others (Paid / Free Tier)
 
-For the highest quality outputs using GPT-4.
+Set `MODEL` to any [Mastra model router](https://mastra.ai/models) ID (`provider/model`) and add that provider's
+API key. No code changes needed — `MODEL` takes priority over the Ollama and Groq settings.
 
-1. Get an API key from [platform.openai.com](https://platform.openai.com)
-2. Modify `src/mastra/agents/architect.ts` to use OpenAI
-
-**Configure `.env`:**
 ```env
-OPENAI_API_KEY=sk-your_api_key_here
+# OpenAI — https://platform.openai.com/api-keys
+MODEL=openai/gpt-5.1
+OPENAI_API_KEY=sk-...
+
+# Anthropic — https://console.anthropic.com
+MODEL=anthropic/claude-sonnet-4-5
+ANTHROPIC_API_KEY=sk-ant-...
+
+# Google Gemini (free tier) — https://aistudio.google.com/app/apikey
+MODEL=google/gemini-2.5-pro
+GOOGLE_GENERATIVE_AI_API_KEY=...
 ```
 
-**Update the agent** (`src/mastra/agents/architect.ts`):
-```typescript
-function getModelConfig() {
-  if (process.env.OPENAI_API_KEY) {
-    return 'openai/gpt-4o';
-  }
-  // ... rest of config
-}
-```
-
----
-
-### Option 5: Google Gemini (Free Tier)
-
-1. Get an API key from [aistudio.google.com](https://aistudio.google.com)
-2. Install the Gemini provider: `npm install @ai-sdk/google`
-
-**Configure `.env`:**
-```env
-GOOGLE_API_KEY=your_api_key_here
-```
-
-**Update the agent:**
-```typescript
-import { google } from '@ai-sdk/google';
-
-function getModelConfig() {
-  if (process.env.GOOGLE_API_KEY) {
-    return google('gemini-1.5-pro');
-  }
-  // ... rest of config
-}
-```
-
----
-
-### Option 6: Anthropic Claude (Paid)
-
-1. Get an API key from [console.anthropic.com](https://console.anthropic.com)
-2. Install the Anthropic provider: `npm install @ai-sdk/anthropic`
-
-**Configure `.env`:**
-```env
-ANTHROPIC_API_KEY=sk-ant-your_api_key_here
-```
-
-**Update the agent:**
-```typescript
-import { anthropic } from '@ai-sdk/anthropic';
-
-function getModelConfig() {
-  if (process.env.ANTHROPIC_API_KEY) {
-    return anthropic('claude-3-5-sonnet-20241022');
-  }
-  // ... rest of config
-}
-```
+> The list of known model IDs comes with `@mastra/core`; upgrade it to use models released after your installed version.
 
 ---
 
@@ -683,6 +637,8 @@ architect-agent/
 │   │   └── config.ts                         # ProjectConfigV2 interface
 │   └── utils/
 │       ├── document-reader.ts                # Read source documents
+│       ├── document-spec.ts                  # PRD/TDR section spec (single source of truth)
+│       ├── document-quality.ts               # Output cleanup + quality gate + revision loop
 │       ├── context-builder.ts                # Build prompts from context
 │       ├── model-config.ts                   # Shared LLM configuration
 │       └── jira-export.ts                    # Jira CSV generation
@@ -695,6 +651,7 @@ architect-agent/
 ├── docs/                                     # Generated documents
 │   ├── stories/                              # User stories
 │   └── exports/                              # HTML, Confluence, Jira
+├── tests/                                    # Unit tests (npm test)
 ├── run.ts                                    # Interactive CLI entry point
 ├── env.example
 └── README.md
@@ -713,14 +670,20 @@ architect-agent/
 
 ## 📝 Output Sections
 
+PRD and TDR sections are defined once in [`src/utils/document-spec.ts`](src/utils/document-spec.ts) and shared by
+interactive mode, the automation pipeline, and the quality gate.
+
 | PRD | TDR | Stories |
 |-----|-----|---------|
-| Executive Summary | Architecture Diagram (Mermaid) | Epics Overview |
-| Problem Statement | Security Design + Code | User Stories |
-| Target Persona | Database Schema (SQL) | Acceptance Criteria |
-| Success Metrics | Scalability Patterns | Test Cases |
-| Requirements (P0/P1/P2) | Rate Limiting Code | Sprint Plan |
-| Timeline & Risks | Common Pitfalls | Jira CSV |
+| Executive Summary | Context & Scope (goals, non-goals, constraints) | Epics Overview |
+| Problem Statement + Persona | Architecture (Mermaid system + sequence diagrams) | User Stories |
+| Goals & Non-Goals | Alternatives Considered (ADR-style) | Acceptance Criteria |
+| Success Metrics (baseline → target) | Data Design + API Design | Test Cases |
+| Functional Requirements (P0/P1/P2) | Security & Privacy (threat model) | Sprint Plan |
+| Non-Functional Requirements | Scalability & Reliability (failure modes) | Dependency Graph |
+| User Stories, Out of Scope | Observability (SLIs/SLOs) + Deployment & Rollback | Jira CSV |
+| Dependencies & Assumptions | Implementation Plan, Pitfalls (❌/✅ code), Testing | |
+| Timeline, Risks, Open Questions | Cost Estimate, Risks & Assumptions | |
 
 ---
 
@@ -732,8 +695,10 @@ architect-agent/
 | `npm run architect:auto` | Automation pipeline (no interaction) |
 | `npm run dev` | Web UI at http://localhost:4111 |
 | `npm run build` | Build for production |
+| `npm test` | Run unit tests (quality gate, prompts, document parsing) |
+| `npm run typecheck` | Type-check `src/`, `cli/`, `tests/`, and `run.ts` |
 
-**Adding new LLM providers:** Install the AI SDK package, update `getModelConfig()` in `architect.ts`, add env variable.
+**Adding new LLM providers:** Set `MODEL=provider/model` and the provider's API key in `.env` (see Option 4 above). For providers outside the Mastra router, update `getModelConfig()` in `src/utils/model-config.ts`.
 
 ### Automation Pipeline Architecture
 

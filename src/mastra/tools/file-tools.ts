@@ -2,6 +2,7 @@ import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import * as fs from 'fs';
 import * as path from 'path';
+import { checkDocumentQuality, cleanGeneratedDocument, formatQualityIssues } from '../../utils/document-quality';
 
 /**
  * TDR Schema - Technical Design Review document structure
@@ -240,12 +241,55 @@ ${prd.timeline.milestones.map((m, i) => `- 🎯 ${m}`).join('\n')}
 }
 
 /**
+ * Return a path in dir for base+ext that doesn't overwrite an existing file
+ * (e.g. foo-2026-01-12.md, then foo-2026-01-12-2.md, ...)
+ */
+function uniqueFilePath(dir: string, base: string, ext: string): string {
+  let candidate = path.join(dir, `${base}.${ext}`);
+  for (let n = 2; fs.existsSync(candidate); n++) {
+    candidate = path.join(dir, `${base}-${n}.${ext}`);
+  }
+  return candidate;
+}
+
+/**
+ * Review Document Tool
+ * Runs the quality gate on a draft so the agent can fix issues before saving
+ */
+export const reviewDocumentTool = createTool({
+  id: 'review-document',
+  description: 'Checks a draft PRD or TDR for missing sections, unfilled template placeholders, broken Mermaid diagrams, and unclosed code blocks. Call this before save-document and fix every ERROR it reports.',
+  inputSchema: z.object({
+    content: z.string().describe('The full Markdown draft of the document'),
+    documentType: z.enum(['PRD', 'TDR']).describe('The type of document being reviewed'),
+  }),
+  outputSchema: z.object({
+    passed: z.boolean(),
+    issues: z.array(z.object({
+      severity: z.enum(['error', 'warning']),
+      message: z.string(),
+    })),
+    message: z.string(),
+  }),
+  execute: async ({ context }) => {
+    const report = checkDocumentQuality(cleanGeneratedDocument(context.content), context.documentType);
+    return {
+      passed: report.passed,
+      issues: report.issues,
+      message: report.issues.length === 0
+        ? '✅ No issues found. Ready to save.'
+        : `${report.passed ? '⚠️ Passed with warnings' : '❌ Fix these before saving'}:\n${formatQualityIssues(report.issues)}`,
+    };
+  },
+});
+
+/**
  * Save Document Tool
  * Saves content to a file in the /docs folder
  */
 export const saveDocumentTool = createTool({
   id: 'save-document',
-  description: 'Saves a document (PRD or TDR) as a Markdown file to the /docs folder. Use this after gathering all interview responses to generate the final document.',
+  description: 'Saves a document (PRD or TDR) as a Markdown file to the /docs folder. Use this after gathering all interview responses and reviewing the document with review-document.',
   inputSchema: z.object({
     filename: z.string().describe('The filename for the document (without extension, e.g., "user-auth-tdr")'),
     content: z.string().describe('The full Markdown content of the document to save'),
@@ -255,9 +299,11 @@ export const saveDocumentTool = createTool({
     success: z.boolean(),
     filePath: z.string(),
     message: z.string(),
+    qualityIssues: z.array(z.string()).optional(),
   }),
   execute: async ({ context }) => {
-    const { filename, content, documentType } = context;
+    const { filename, documentType } = context;
+    const content = cleanGeneratedDocument(context.content);
     
     // Get the project root directory
     const projectRoot = process.cwd();
@@ -268,11 +314,11 @@ export const saveDocumentTool = createTool({
       fs.mkdirSync(docsDir, { recursive: true });
     }
     
-    // Generate a timestamp for unique filenames
+    // Date-stamped filename; never overwrite an earlier document from the same day
     const timestamp = new Date().toISOString().split('T')[0];
     const sanitizedFilename = filename.replace(/[^a-zA-Z0-9-_]/g, '-').toLowerCase();
-    const fullFilename = `${sanitizedFilename}-${timestamp}.md`;
-    const filePath = path.join(docsDir, fullFilename);
+    const filePath = uniqueFilePath(docsDir, `${sanitizedFilename}-${timestamp}`, 'md');
+    const report = checkDocumentQuality(content, documentType);
     
     try {
       // Add document header metadata
@@ -289,7 +335,9 @@ Tool: Document Architect Agent
       return {
         success: true,
         filePath: filePath,
-        message: `✅ ${documentType} saved successfully to: ${filePath}`,
+        message: `✅ ${documentType} saved successfully to: ${filePath}` +
+          (report.issues.length > 0 ? ` (${report.issues.length} quality issue(s) remain - mention them to the user)` : ''),
+        qualityIssues: report.issues.map(i => `[${i.severity}] ${i.message}`),
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -338,12 +386,14 @@ export const generateDiagramTool = createTool({
 graph TB
     subgraph "${title}"
 ${components.map(c => {
-  const shape = c.type === 'database' ? `[(${c.label})]` :
-                c.type === 'queue' ? `{{${c.label}}}` :
-                c.type === 'cache' ? `([${c.label}])` :
-                c.type === 'external' ? `>${c.label}]` :
-                c.type === 'user' ? `((${c.label}))` :
-                `[${c.label}]`;
+  // Quote labels so spaces, parentheses and slashes don't break Mermaid parsing
+  const label = `"${c.label.replace(/"/g, '#quot;')}"`;
+  const shape = c.type === 'database' ? `[(${label})]` :
+                c.type === 'queue' ? `{{${label}}}` :
+                c.type === 'cache' ? `([${label}])` :
+                c.type === 'external' ? `>${label}]` :
+                c.type === 'user' ? `((${label}))` :
+                `[${label}]`;
   return `        ${c.id}${shape}`;
 }).join('\n')}
     end
@@ -372,7 +422,7 @@ ${connections.map(conn => {
       mermaidCode = `\`\`\`mermaid
 graph LR
     subgraph "${title}"
-${components.map(c => `        ${c.id}[${c.label}]`).join('\n')}
+${components.map(c => `        ${c.id}["${c.label.replace(/"/g, '#quot;')}"]`).join('\n')}
     end
 ${connections.map(conn => `    ${conn.from} --> ${conn.to}`).join('\n')}
 \`\`\``;

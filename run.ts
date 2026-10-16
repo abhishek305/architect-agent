@@ -45,10 +45,7 @@ ${colors.cyan}╔═════════════════════
 `;
 
 // Store conversation history for context
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-}
+type Message = { role: 'user'; content: string } | { role: 'assistant'; content: string };
 
 /**
  * Load environment variables from .env file
@@ -160,7 +157,8 @@ async function main(): Promise<void> {
       conversationHistory.push({ role: 'user', content: userMessage });
 
       // Generate response from agent
-      const response = await architectAgent.generate(conversationHistory);
+      // Interactive turns may chain several tools (list → read → review → save), so allow more steps
+      const response = await architectAgent.generate(conversationHistory, { maxSteps: 10 });
 
       // Extract text from response
       const assistantMessage = response.text || 'I apologize, but I was unable to generate a response.';

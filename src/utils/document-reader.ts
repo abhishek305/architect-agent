@@ -192,15 +192,21 @@ export function extractKeySections(content: string, maxLength: number = 4000): s
   const sections: string[] = [];
   let currentLength = 0;
 
-  // Priority sections to extract (in order)
+  // Priority sections to extract (in order). Headings may be numbered ("## 2. Problem Statement"),
+  // and a section runs until the next H2 (not H3) or the end of the document.
+  const section = (names: string) =>
+    new RegExp(`^##[ \\t]+(?:\\d+\\.[ \\t]*)?[^\\n]*?(?:${names})[\\s\\S]*?(?=^##[ \\t]|(?![\\s\\S]))`, 'im');
   const prioritySections = [
     /^#\s+.*$/m,                           // Main title
-    /^##\s+(Executive Summary|Overview|Summary)[\s\S]*?(?=^##|\Z)/im,
-    /^##\s+(Problem|Problem Statement)[\s\S]*?(?=^##|\Z)/im,
-    /^##\s+(Goals|Objectives|Success Metrics)[\s\S]*?(?=^##|\Z)/im,
-    /^##\s+(Requirements|Features)[\s\S]*?(?=^##|\Z)/im,
-    /^##\s+(Architecture|System Design)[\s\S]*?(?=^##|\Z)/im,
-    /^##\s+(Tech Stack|Technology)[\s\S]*?(?=^##|\Z)/im,
+    section('Executive Summary|Overview|Summary'),
+    section('Problem'),
+    section('Goals|Objectives|Success Metrics'),
+    section('Requirements|Features'),
+    section('Context & Scope|Constraints'),
+    section('Architecture|System Design'),
+    section('Data Design|Data Model'),
+    section('API Design'),
+    section('Tech Stack|Technology'),
   ];
 
   for (const pattern of prioritySections) {

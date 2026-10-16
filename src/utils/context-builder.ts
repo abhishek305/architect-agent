@@ -10,6 +10,7 @@
 
 import { ProjectConfigV2, InterviewAnswers } from '../types/config';
 import { readSourceDocuments, extractKeySections } from './document-reader';
+import { PRD_SECTIONS, TDR_SECTIONS, renderSectionOutline } from './document-spec';
 
 /**
  * Context building options
@@ -291,15 +292,12 @@ ${context.promptContext}
 - **Author:** ${author}
 - **Date:** ${timestamp}
 
-Generate the complete PRD now. Include:
-1. Executive Summary (2-3 paragraphs)
-2. Problem Statement with specific user pain points
-3. Target Persona with role, goals, and frustrations
-4. Goals and Success Metrics (table with KPIs)
-5. Requirements organized by P0/P1/P2 priority
-6. User Stories with acceptance criteria (at least 5 stories)
-7. Timeline with milestones
-8. Risks and mitigations
+Generate the complete PRD now using exactly these H2 sections, in order:
+
+${renderSectionOutline(PRD_SECTIONS)}
+
+Where the context above is silent, make a reasonable assumption, mark it *(Assumption)*, and list it under
+Dependencies & Assumptions. Never leave template placeholders like [Name] or [X weeks].
 
 Start the document with: # ${config.projectName} - Product Requirements Document`;
 }
@@ -353,17 +351,13 @@ ${truncatedPRD}
 - **Author:** ${author}
 - **Date:** ${timestamp}
 
-Generate the complete TDR now. Include:
-1. Executive Summary
-2. System Architecture with Mermaid.js diagram (use graph TB)
-3. Component breakdown table with responsibilities and SLAs
-4. Database schema with SQL CREATE TABLE statements
-5. API design with REST endpoints (method, path, request/response)
-6. Security Audit (threat model, authentication code examples)
-7. Scalability Plan (bottlenecks, SLIs/SLOs)
-8. Implementation Guide with step-by-step instructions
-9. Common Pitfalls for junior/mid developers
-10. Code examples in TypeScript where applicable
+Generate the complete TDR now using exactly these H2 sections, in order:
+
+${renderSectionOutline(TDR_SECTIONS)}
+
+Code examples must use the project's tech stack${config.techStack?.length ? ` (${config.techStack.join(', ')})` : ''}.
+Where the context above is silent, make a reasonable assumption, mark it *(Assumption)*, and list it under
+Risks, Assumptions & Open Questions. Never leave template placeholders like [Name] or [X weeks].
 
 Start the document with: # ${config.projectName} - Technical Design Review`;
 
